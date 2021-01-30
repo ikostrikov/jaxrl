@@ -1,0 +1,24 @@
+name: jax-rl
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - patchelf==0.12
+  - pip==21.0.1
+  - numpy=1.19.2
+  - scipy=1.6.0
+  - pip:
+    - absl-py==0.12.0
+    - gym[mujoco]==0.18.0
+    - tqdm==4.60.0
+    - flax==0.3.3
+    - jax==0.2.9
+    - jaxlib==0.1.59
+    - ml_collections==0.1.0
+    - tensorboardX==2.2
+    - tensorflow_probability==0.12.1
+    - imageio==2.9.0
+    - imageio-ffmpeg==0.4.3
+    - git+git://github.com/deepmind/dm_control.git
+    - git+git://github.com/denisyarats/dmc2gym.git
+prefix: $HOME/anaconda3
