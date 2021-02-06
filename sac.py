@@ -6,6 +6,7 @@ import typing
 import flax
 import jax
 import jax.numpy as jnp
+import numpy as np
 from flax import linen as nn
 from flax.core.frozen_dict import FrozenDict
 from flax.optim.base import Optimizer
@@ -221,7 +222,7 @@ class SAC(object):
         actions, _, self.rng = self.actor_apply_jit(
             {'params': self.actor_optimizer.target}, observations, temperature,
             self.rng)
-        return actions
+        return np.asarray(actions)
 
     def update_step(self, batch: rl_types.Batch) -> typing.Dict[str, float]:
         (self.actor_optimizer, self.critic_optimizer, self.alpha_optimizer,
