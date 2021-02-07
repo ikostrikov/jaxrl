@@ -8,7 +8,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from flax import linen as nn
-from flax.core.frozen_dict import FrozenDict
 from flax.optim.base import Optimizer
 from tensorflow_probability.substrates import jax as tfp
 
@@ -16,6 +15,9 @@ import rl_types
 
 tfd = tfp.distributions
 tfb = tfp.bijectors
+
+PRNGKey = typing.Any
+Params = flax.core.frozen_dict.FrozenDict
 
 
 class MLP(nn.Module):
@@ -53,9 +55,8 @@ class Actor(nn.Module):
 
     @nn.compact
     def __call__(
-        self, observations: jnp.DeviceArray, temperature: float,
-        rng: jnp.DeviceArray
-    ) -> typing.Tuple[jnp.DeviceArray, jnp.DeviceArray, jnp.DeviceArray]:
+        self, observations: jnp.DeviceArray, temperature: float, rng: PRNGKey
+    ) -> typing.Tuple[jnp.DeviceArray, jnp.DeviceArray, PRNGKey]:
         outputs = MLP((*self.hidden_dims, 2 * self.action_dim))(observations)
 
         means, log_stds = jnp.split(outputs, 2, axis=-1)
@@ -75,14 +76,9 @@ class Actor(nn.Module):
 
 
 def update_actor(
-    actor_def: nn.Module,
-    critic_def: nn.Module,
-    actor_optimizer: Optimizer,
-    alpha_optimizer: Optimizer,
-    critic_params: FrozenDict,
-    batch: rl_types.Batch,
-    target_entropy: float,
-    key: jnp.DeviceArray,
+    actor_def: nn.Module, critic_def: nn.Module, actor_optimizer: Optimizer,
+    alpha_optimizer: Optimizer, critic_params: Params, batch: rl_types.Batch,
+    target_entropy: float, key: PRNGKey
 ) -> typing.Tuple[Optimizer, Optimizer, typing.Dict[str, float]]:
     alpha = jnp.exp(alpha_optimizer.target)
 
@@ -112,11 +108,12 @@ def update_actor(
     })
 
 
-def update_critic(actor_def: nn.Module, critic_def: nn.Module,
-                  critic_optimizer: Optimizer, actor_params: FrozenDict,
-                  alpha: float, target_critic_params: FrozenDict,
-                  batch: rl_types.Batch, tau: float, discount: float,
-                  key: jnp.DeviceArray):
+def update_critic(
+        actor_def: nn.Module, critic_def: nn.Module,
+        critic_optimizer: Optimizer, actor_params: Params, alpha: float,
+        target_critic_params: Params, batch: rl_types.Batch, tau: float,
+        discount: float, key: PRNGKey
+) -> typing.Tuple[Optimizer, Params, typing.Dict[str, float]]:
     next_actions, next_log_probs, _ = actor_def.apply({'params': actor_params},
                                                       batch.next_observations,
                                                       1.0, key)
@@ -137,8 +134,8 @@ def update_critic(actor_def: nn.Module, critic_def: nn.Module,
     critic_loss, critic_grad = critic_grad_fn(critic_optimizer.target)
     critic_optimizer = critic_optimizer.apply_gradient(critic_grad)
 
-    def soft_update(params: FrozenDict, target_params: FrozenDict,
-                    tau: float) -> FrozenDict:
+    def soft_update(params: Params, target_params: Params,
+                    tau: float) -> Params:
         return jax.tree_multimap(lambda p, tp: p * tau + tp * (1 - tau),
                                  params, target_params)
 
@@ -152,10 +149,10 @@ def update_critic(actor_def: nn.Module, critic_def: nn.Module,
 def update_step_jit(
     actor_def: nn.Module, critic_def: nn.Module, actor_optimizer: Optimizer,
     critic_optimizer: Optimizer, alpha_optimizer: Optimizer,
-    target_critic_params: FrozenDict, batch: rl_types.Batch, tau: float,
-    discount: float, target_entropy: float, rng: jnp.DeviceArray
-) -> typing.Tuple[Optimizer, Optimizer, Optimizer, FrozenDict, typing.Dict[
-        str, float], jnp.DeviceArray]:
+    target_critic_params: Params, batch: rl_types.Batch, tau: float,
+    discount: float, target_entropy: float, rng: PRNGKey
+) -> typing.Tuple[Optimizer, Optimizer, Optimizer, Params, typing.Dict[
+        str, float], PRNGKey]:
 
     rng, key = jax.random.split(rng)
     actor_optimizer, alpha_optimizer, actor_info = update_actor(
@@ -217,8 +214,8 @@ class SAC(object):
         self.target_entropy = -action_dim
 
     def sample_actions(self,
-                       observations: jnp.DeviceArray,
-                       temperature: float = 1.0) -> jnp.DeviceArray:
+                       observations: np.ndarray,
+                       temperature: float = 1.0) -> np.ndarray:
         actions, _, self.rng = self.actor_apply_jit(
             {'params': self.actor_optimizer.target}, observations, temperature,
             self.rng)
