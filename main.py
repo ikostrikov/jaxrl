@@ -59,7 +59,7 @@ def main(_):
         if done:
             observation = env.reset()
             done = False
-            for k in ['episode_return', 'episode_length']:
+            for k in ['episode_return', 'episode_length', 'episode_duration']:
                 if k in info:
                     summary_writer.scalar(f'training/{k}', info[k], i)
 

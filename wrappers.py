@@ -1,3 +1,4 @@
+import time
 import typing
 
 import gym
@@ -10,8 +11,12 @@ class EpisodeMonitor(gym.ActionWrapper):
     """A class that computes episode returns and lengths."""
     def __init__(self, env: gym.Env):
         super().__init__(env)
+        self._reset_stats()
+
+    def _reset_stats(self):
         self.reward_sum = 0.0
         self.episode_length = 0
+        self.start_time = time.time()
 
     def step(self, action: np.ndarray) -> TimeStep:
         observation, reward, done, info = self.env.step(action)
@@ -21,10 +26,10 @@ class EpisodeMonitor(gym.ActionWrapper):
 
         info['episode_return'] = self.reward_sum
         info['episode_length'] = self.episode_length
+        info['episode_duration'] = time.time() - self.start_time
 
         return observation, reward, done, info
 
     def reset(self) -> np.ndarray:
-        self.reward_sum = 0
-        self.episode_length = 0
+        self._reset_stats()
         return self.env.reset()
