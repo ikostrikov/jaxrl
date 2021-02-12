@@ -219,7 +219,8 @@ class SAC(object):
         actions, _, self.rng = self.actor_apply_jit(
             {'params': self.actor_optimizer.target}, observations, temperature,
             self.rng)
-        return np.asarray(actions)
+        action = np.asarray(actions)
+        return np.clip(action, -1.0, 1.0)
 
     def update_step(self, batch: rl_types.Batch) -> typing.Dict[str, float]:
         (self.actor_optimizer, self.critic_optimizer, self.alpha_optimizer,

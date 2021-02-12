@@ -7,6 +7,7 @@ import tqdm
 from absl import app, flags
 from flax.metrics import tensorboard
 import tensorflow as tf
+from gym.wrappers.rescale_action import RescaleAction
 
 import wrappers
 from sac import SAC
@@ -36,8 +37,12 @@ def main(_):
     with open(os.path.join(FLAGS.save_dir, 'flags.txt'), 'w') as f:
         f.write(FLAGS.flags_into_string())
 
-    env = wrappers.EpisodeMonitor(gym.make(FLAGS.env_name))
-    eval_env = wrappers.EpisodeMonitor(gym.make(FLAGS.env_name))
+    def wrap(env):
+        env = RescaleAction(env, -1.0, 1.0)
+        return wrappers.EpisodeMonitor(env)
+
+    env = wrap(gym.make(FLAGS.env_name))
+    eval_env = wrap(gym.make(FLAGS.env_name))
 
     env.seed(FLAGS.seed)
     eval_env.seed(FLAGS.seed + 1)
