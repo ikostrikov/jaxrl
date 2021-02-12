@@ -1,4 +1,4 @@
-name: flax-sac
+name: jax-sac
 channels:
   - defaults
 dependencies:
@@ -12,6 +12,6 @@ dependencies:
     - flax==0.3.0
     - jax==0.2.9
     - jaxlib==0.1.59
-    - tensorflow==2.4.1 # For tensorboard support
+    - tensorboardX==2.1
     - tensorflow_probability==0.12.1
-prefix: /home/kostrikov/anaconda3
+prefix: $HOME/anaconda3

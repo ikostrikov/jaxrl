@@ -3,15 +3,15 @@
 import copy
 import typing
 
-import flax
 import jax
 import jax.numpy as jnp
 import numpy as np
-from flax import linen as nn
-from flax.optim.base import Optimizer
 from tensorflow_probability.substrates import jax as tfp
 
+import flax
 import rl_types
+from flax import linen as nn
+from flax.optim.base import Optimizer
 
 tfd = tfp.distributions
 tfb = tfp.bijectors
