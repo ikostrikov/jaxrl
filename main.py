@@ -5,8 +5,7 @@ import gym
 import numpy as np
 import tqdm
 from absl import app, flags
-from flax.metrics import tensorboard
-import tensorflow as tf
+from tensorboardX import SummaryWriter
 from gym.wrappers.rescale_action import RescaleAction
 
 import wrappers
@@ -29,8 +28,6 @@ flags.DEFINE_integer('start_training', int(1e4),
 
 
 def main(_):
-    tf.config.experimental.set_visible_devices([], 'GPU')
-
     if not os.path.exists(FLAGS.save_dir):
         os.makedirs(FLAGS.save_dir)
 
@@ -54,8 +51,7 @@ def main(_):
     agent = SAC(observation_dim, action_dim, FLAGS.seed)
     replay_buffer = ReplayBuffer(observation_dim, action_dim, FLAGS.max_steps)
 
-    summary_writer = tensorboard.SummaryWriter(
-        os.path.join(FLAGS.save_dir, 'tb'))
+    summary_writer = SummaryWriter(os.path.join(FLAGS.save_dir, 'tb'))
 
     eval_returns = []
 
@@ -66,7 +62,7 @@ def main(_):
             done = False
             for k in ['episode_return', 'episode_length', 'episode_duration']:
                 if k in info:
-                    summary_writer.scalar(f'training/{k}', info[k], i)
+                    summary_writer.add_scalar(f'training/{k}', info[k], i)
 
         if len(replay_buffer) < FLAGS.start_training:
             action = env.action_space.sample()
@@ -91,7 +87,7 @@ def main(_):
 
             if len(replay_buffer) % FLAGS.log_interval == 0:
                 for k, v in update_info.items():
-                    summary_writer.scalar(f'training/{k}', v, i)
+                    summary_writer.add_scalar(f'training/{k}', v, i)
 
         if (i + 1) % FLAGS.eval_interval == 0:
             eval_stats = {'episode_return': [], 'episode_length': []}
@@ -108,8 +104,8 @@ def main(_):
                             eval_stats[k].append(eval_info[k])
                         break
             for k, v in eval_stats.items():
-                summary_writer.scalar(f'evaluation/average_{k}s', np.mean(v),
-                                      i)
+                summary_writer.add_scalar(f'evaluation/average_{k}s',
+                                          np.mean(v), i)
             eval_returns.append((i + 1, np.mean(eval_stats['episode_return'])))
             np.savetxt(os.path.join(FLAGS.save_dir, 'results.txt'),
                        eval_returns)
