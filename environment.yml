@@ -1,4 +1,4 @@
-name: flax-sac
+name: jax-sac
 channels:
   - defaults
 dependencies:
@@ -7,11 +7,10 @@ dependencies:
   - scipy=1.6.0
   - pip:
     - absl-py==0.11.0
-    - gym[mujoco]==0.18.0
+    - gym==0.18.0
     - tqdm==4.50.2
     - flax==0.3.0
     - jax==0.2.9
     - jaxlib==0.1.59
-    - tensorflow==2.4.1 # For tensorboard support
     - tensorflow_probability==0.12.1
-prefix: /home/kostrikov/anaconda3
+prefix: $HOME/anaconda3
