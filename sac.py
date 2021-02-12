@@ -3,15 +3,15 @@
 import copy
 import typing
 
+import flax
 import jax
 import jax.numpy as jnp
 import numpy as np
-from tensorflow_probability.substrates import jax as tfp
-
-import flax
-import rl_types
 from flax import linen as nn
 from flax.optim.base import Optimizer
+from tensorflow_probability.substrates import jax as tfp
+
+import rl_types
 
 tfd = tfp.distributions
 tfb = tfp.bijectors
@@ -122,7 +122,7 @@ def update_critic(
                                         batch.next_observations, next_actions)
     next_q = jnp.minimum(next_q1, next_q2)
 
-    target_q = batch.rewards + discount * batch.discounts * (
+    target_q = batch.rewards + discount * batch.masks * (
         next_q - alpha * next_log_probs)
 
     def critic_loss_fn(critic_params):

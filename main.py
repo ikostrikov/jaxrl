@@ -73,11 +73,11 @@ def main(_):
         next_observation, reward, done, info = env.step(action)
 
         if not done or 'TimeLimit.truncated' in info:
-            discount = 1.0
+            mask = 1.0
         else:
-            discount = 0.0
+            mask = 0.0
 
-        replay_buffer.insert(observation, action, reward, discount,
+        replay_buffer.insert(observation, action, reward, mask,
                              next_observation)
         observation = next_observation
 
