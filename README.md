@@ -25,3 +25,7 @@ python main.py --env_name=HalfCheetah-v2 --save_dir=./tmp/
 For [this commit](https://github.com/ikostrikov/jax-sac/commit/8a188ca915d1f04b965a199f9b18551f33fdb0f7).
 
 ![gym](./images/results.png)
+
+# Contributing
+
+When contributing to this repository, please first discuss the change you wish to make via issue. If you are not familiar with pull requests, please read [this documentation](https://opensource.com/article/19/7/create-pull-request-github).
