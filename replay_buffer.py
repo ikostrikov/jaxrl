@@ -9,7 +9,7 @@ class ReplayBuffer(object):
                                      dtype=np.float32)
         self.actions = np.empty((capacity, action_dim), dtype=np.float32)
         self.rewards = np.empty((capacity, ), dtype=np.float32)
-        self.discounts = np.empty((capacity, ), dtype=np.float32)
+        self.masks = np.empty((capacity, ), dtype=np.float32)
         self.next_observations = np.empty((capacity, observation_dim),
                                           dtype=np.float32)
 
@@ -23,7 +23,7 @@ class ReplayBuffer(object):
         self.observations[self.insert_index] = observation
         self.actions[self.insert_index] = action
         self.rewards[self.insert_index] = reward
-        self.discounts[self.insert_index] = discount
+        self.masks[self.insert_index] = discount
         self.next_observations[self.insert_index] = next_observation
 
         self.insert_index = (self.insert_index + 1) % self.capacity
@@ -34,7 +34,7 @@ class ReplayBuffer(object):
         return rl_types.Batch(observations=self.observations[ind],
                               actions=self.actions[ind],
                               rewards=self.rewards[ind],
-                              discounts=self.discounts[ind],
+                              masks=self.masks[ind],
                               next_observations=self.next_observations[ind])
 
     def __len__(self):
