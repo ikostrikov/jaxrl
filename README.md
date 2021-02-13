@@ -22,8 +22,6 @@ python main.py --env_name=HalfCheetah-v2 --save_dir=./tmp/
 
 # Results
 
-For [this commit](https://github.com/ikostrikov/jax-sac/commit/8a188ca915d1f04b965a199f9b18551f33fdb0f7).
-
 ![gym](./images/results.png)
 
 # Contributing

@@ -25,13 +25,14 @@ class MLP(nn.Module):
 
     @nn.compact
     def __call__(self, x: jnp.DeviceArray) -> jnp.DeviceArray:
+        relu_gain = jnp.sqrt(2.0)
+
         for size in self.hidden_dims[:-1]:
             x = nn.Dense(size,
-                         kernel_init=nn.initializers.orthogonal(
-                             jnp.sqrt(2.0)))(x)
+                         kernel_init=nn.initializers.orthogonal(relu_gain))(x)
             x = nn.relu(x)
         x = nn.Dense(self.hidden_dims[-1],
-                     kernel_init=nn.initializers.orthogonal(1e-2))(x)
+                     kernel_init=nn.initializers.orthogonal())(x)
 
         return x
 
@@ -202,7 +203,7 @@ class SAC(object):
         critic_params = self.critic_def.init(key, observation_inputs,
                                              action_inputs)['params']
         self.target_critic_params = copy.deepcopy(critic_params)
-        log_alpha = jnp.log(0.1)
+        log_alpha = jnp.log(1.0)
 
         self.critic_optimizer = flax.optim.Adam(
             learning_rate=critic_lr).create(critic_params)
