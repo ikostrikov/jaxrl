@@ -56,7 +56,9 @@ def main(_):
     eval_returns = []
 
     done, info, observation = True, {}, np.empty(())
-    for i in tqdm.tqdm(range(FLAGS.max_steps), smoothing=0.1):
+    for i in tqdm.tqdm(range(FLAGS.max_steps),
+                       smoothing=0.1,
+                       disable='SLURM_PROCID' in os.environ):
         if done:
             observation = env.reset()
             done = False
