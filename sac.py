@@ -27,11 +27,10 @@ class MLP(nn.Module):
     def __call__(self, x: jnp.DeviceArray) -> jnp.DeviceArray:
         for size in self.hidden_dims[:-1]:
             x = nn.Dense(size,
-                         kernel_init=nn.initializers.orthogonal(
-                             jnp.sqrt(2.0)))(x)
+                         kernel_init=jax.nn.initializers.glorot_uniform())(x)
             x = nn.relu(x)
         x = nn.Dense(self.hidden_dims[-1],
-                     kernel_init=nn.initializers.orthogonal(1e-2))(x)
+                     kernel_init=jax.nn.initializers.glorot_uniform())(x)
 
         return x
 
@@ -60,7 +59,7 @@ class Actor(nn.Module):
         outputs = MLP((*self.hidden_dims, 2 * self.action_dim))(observations)
 
         means, log_stds = jnp.split(outputs, 2, axis=-1)
-        log_stds = jnp.clip(log_stds, -5.0, 2.0)
+        log_stds = jnp.clip(log_stds, -20.0, 2.0)
 
         base_dist = tfd.MultivariateNormalDiag(loc=means,
                                                scale_diag=jnp.exp(log_stds) *
@@ -95,7 +94,7 @@ def update_actor(
     actor_optimizer = actor_optimizer.apply_gradient(actor_grad)
 
     def alpha_loss_fn(log_alpha):
-        return log_alpha * (-log_probs - target_entropy).mean()
+        return jnp.exp(log_alpha) * (-log_probs - target_entropy).mean()
 
     alpha_grad_fn = jax.value_and_grad(alpha_loss_fn)
     alpha_loss, alpha_grad = alpha_grad_fn(alpha_optimizer.target)
@@ -155,15 +154,15 @@ def update_step_jit(
         str, float], PRNGKey]:
 
     rng, key = jax.random.split(rng)
-    actor_optimizer, alpha_optimizer, actor_info = update_actor(
-        actor_def, critic_def, actor_optimizer, alpha_optimizer,
-        critic_optimizer.target, batch, target_entropy, key)
-
-    rng, key = jax.random.split(rng)
     alpha = jnp.exp(alpha_optimizer.target)
     critic_optimizer, target_critic_params, critic_info = update_critic(
         actor_def, critic_def, critic_optimizer, actor_optimizer.target, alpha,
         target_critic_params, batch, tau, discount, key)
+
+    rng, key = jax.random.split(rng)
+    actor_optimizer, alpha_optimizer, actor_info = update_actor(
+        actor_def, critic_def, actor_optimizer, alpha_optimizer,
+        critic_optimizer.target, batch, target_entropy, key)
 
     return (actor_optimizer, critic_optimizer, alpha_optimizer,
             target_critic_params, {
@@ -202,7 +201,7 @@ class SAC(object):
         critic_params = self.critic_def.init(key, observation_inputs,
                                              action_inputs)['params']
         self.target_critic_params = copy.deepcopy(critic_params)
-        log_alpha = jnp.log(0.1)
+        log_alpha = jnp.log(1.0)
 
         self.critic_optimizer = flax.optim.Adam(
             learning_rate=critic_lr).create(critic_params)
