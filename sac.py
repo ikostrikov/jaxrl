@@ -210,7 +210,7 @@ class SAC(object):
         self.alpha_optimizer = flax.optim.Adam(
             learning_rate=alpha_lr).create(log_alpha)
 
-        self.target_entropy = -action_dim
+        self.target_entropy = -action_dim / 2
 
     def sample_actions(self,
                        observations: np.ndarray,
