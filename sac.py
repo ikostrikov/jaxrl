@@ -19,6 +19,8 @@ tfb = tfp.bijectors
 PRNGKey = typing.Any
 Params = flax.core.frozen_dict.FrozenDict
 
+default_init = nn.initializers.orthogonal()
+
 
 class MLP(nn.Module):
     hidden_dims: typing.Sequence[int]
@@ -26,11 +28,9 @@ class MLP(nn.Module):
     @nn.compact
     def __call__(self, x: jnp.DeviceArray) -> jnp.DeviceArray:
         for size in self.hidden_dims[:-1]:
-            x = nn.Dense(size,
-                         kernel_init=jax.nn.initializers.glorot_uniform())(x)
+            x = nn.Dense(size, kernel_init=default_init)(x)
             x = nn.relu(x)
-        x = nn.Dense(self.hidden_dims[-1],
-                     kernel_init=jax.nn.initializers.glorot_uniform())(x)
+        x = nn.Dense(self.hidden_dims[-1], kernel_init=default_init)(x)
 
         return x
 
