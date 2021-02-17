@@ -41,8 +41,10 @@ def main(_):
     env = wrap(gym.make(FLAGS.env_name))
     eval_env = wrap(gym.make(FLAGS.env_name))
 
-    env.seed(FLAGS.seed)
-    eval_env.seed(FLAGS.seed + 1)
+    for e in [eval_env, env]:
+        e.seed(FLAGS.seed)
+        e.action_space.seed(FLAGS.seed)
+        e.observation_space.seed(FLAGS.seed)
     np.random.seed(FLAGS.seed)
     random.seed(FLAGS.seed)
 
