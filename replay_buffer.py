@@ -1,6 +1,10 @@
+import collections
+
 import numpy as np
 
-import rl_types
+Batch = collections.namedtuple(
+    'Batch',
+    ['observations', 'actions', 'rewards', 'masks', 'next_observations'])
 
 
 class ReplayBuffer(object):
@@ -29,13 +33,13 @@ class ReplayBuffer(object):
         self.insert_index = (self.insert_index + 1) % self.capacity
         self.size = min(self.size + 1, self.capacity)
 
-    def sample(self, batch_size: int) -> rl_types.Batch:
+    def sample(self, batch_size: int) -> Batch:
         ind = np.random.randint(low=0, high=self.size, size=(batch_size, ))
-        return rl_types.Batch(observations=self.observations[ind],
-                              actions=self.actions[ind],
-                              rewards=self.rewards[ind],
-                              masks=self.masks[ind],
-                              next_observations=self.next_observations[ind])
+        return Batch(observations=self.observations[ind],
+                     actions=self.actions[ind],
+                     rewards=self.rewards[ind],
+                     masks=self.masks[ind],
+                     next_observations=self.next_observations[ind])
 
     def __len__(self):
         return self.size

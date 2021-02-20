@@ -11,7 +11,7 @@ from flax import linen as nn
 from flax.optim.base import Optimizer
 from tensorflow_probability.substrates import jax as tfp
 
-import rl_types
+import replay_buffer
 
 tfd = tfp.distributions
 tfb = tfp.bijectors
@@ -76,8 +76,8 @@ class Actor(nn.Module):
 
 def update_actor(
     actor_def: nn.Module, critic_def: nn.Module, actor_optimizer: Optimizer,
-    alpha_optimizer: Optimizer, critic_params: Params, batch: rl_types.Batch,
-    target_entropy: float, key: PRNGKey
+    alpha_optimizer: Optimizer, critic_params: Params,
+    batch: replay_buffer.Batch, target_entropy: float, key: PRNGKey
 ) -> typing.Tuple[Optimizer, Optimizer, typing.Dict[str, float]]:
     alpha = jnp.exp(alpha_optimizer.target)
 
@@ -110,7 +110,7 @@ def update_actor(
 def update_critic(
         actor_def: nn.Module, critic_def: nn.Module,
         critic_optimizer: Optimizer, actor_params: Params, alpha: float,
-        target_critic_params: Params, batch: rl_types.Batch, tau: float,
+        target_critic_params: Params, batch: replay_buffer.Batch, tau: float,
         discount: float, key: PRNGKey
 ) -> typing.Tuple[Optimizer, Params, typing.Dict[str, float]]:
     next_actions, next_log_probs, _ = actor_def.apply({'params': actor_params},
@@ -148,7 +148,7 @@ def update_critic(
 def update_step_jit(
     actor_def: nn.Module, critic_def: nn.Module, actor_optimizer: Optimizer,
     critic_optimizer: Optimizer, alpha_optimizer: Optimizer,
-    target_critic_params: Params, batch: rl_types.Batch, tau: float,
+    target_critic_params: Params, batch: replay_buffer.Batch, tau: float,
     discount: float, target_entropy: float, rng: PRNGKey
 ) -> typing.Tuple[Optimizer, Optimizer, Optimizer, Params, typing.Dict[
         str, float], PRNGKey]:
@@ -221,7 +221,8 @@ class SAC(object):
         action = np.asarray(actions)
         return np.clip(action, -1.0, 1.0)
 
-    def update_step(self, batch: rl_types.Batch) -> typing.Dict[str, float]:
+    def update_step(self,
+                    batch: replay_buffer.Batch) -> typing.Dict[str, float]:
         (self.actor_optimizer, self.critic_optimizer, self.alpha_optimizer,
          self.target_critic_params, info, self.rng) = update_step_jit(
              self.actor_def, self.critic_def, self.actor_optimizer,
