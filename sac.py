@@ -19,18 +19,20 @@ tfb = tfp.bijectors
 PRNGKey = typing.Any
 Params = flax.core.frozen_dict.FrozenDict
 
-default_init = nn.initializers.orthogonal()
+default_init = nn.initializers.orthogonal
 
 
 class MLP(nn.Module):
     hidden_dims: typing.Sequence[int]
+    final_dense_gain: float = 1.0
 
     @nn.compact
     def __call__(self, x: jnp.DeviceArray) -> jnp.DeviceArray:
         for size in self.hidden_dims[:-1]:
-            x = nn.Dense(size, kernel_init=default_init)(x)
+            x = nn.Dense(size, kernel_init=default_init())(x)
             x = nn.relu(x)
-        x = nn.Dense(self.hidden_dims[-1], kernel_init=default_init)(x)
+        x = nn.Dense(self.hidden_dims[-1],
+                     kernel_init=default_init(self.final_dense_gain))(x)
 
         return x
 
@@ -56,7 +58,8 @@ class Actor(nn.Module):
     def __call__(
         self, observations: jnp.DeviceArray, temperature: float, rng: PRNGKey
     ) -> typing.Tuple[jnp.DeviceArray, jnp.DeviceArray, PRNGKey]:
-        outputs = MLP((*self.hidden_dims, 2 * self.action_dim))(observations)
+        outputs = MLP((*self.hidden_dims, 2 * self.action_dim),
+                      final_dense_gain=1e-2)(observations)
 
         means, log_stds = jnp.split(outputs, 2, axis=-1)
         log_stds = jnp.clip(log_stds, -20.0, 2.0)

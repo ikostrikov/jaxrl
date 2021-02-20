@@ -31,9 +31,6 @@ def main(_):
     if not os.path.exists(FLAGS.save_dir):
         os.makedirs(FLAGS.save_dir)
 
-    with open(os.path.join(FLAGS.save_dir, 'flags.txt'), 'w') as f:
-        f.write(FLAGS.flags_into_string())
-
     def wrap(env):
         env = RescaleAction(env, -1.0, 1.0)
         return wrappers.EpisodeMonitor(env)
@@ -53,7 +50,8 @@ def main(_):
     agent = SAC(observation_dim, action_dim, FLAGS.seed)
     replay_buffer = ReplayBuffer(observation_dim, action_dim, FLAGS.max_steps)
 
-    summary_writer = SummaryWriter(os.path.join(FLAGS.save_dir, 'tb'))
+    summary_writer = SummaryWriter(
+        os.path.join(FLAGS.save_dir, 'tb', str(FLAGS.seed)))
 
     eval_returns = []
 
@@ -109,7 +107,7 @@ def main(_):
                 summary_writer.add_scalar(f'evaluation/average_{k}s',
                                           np.mean(v), i)
             eval_returns.append((i + 1, np.mean(eval_stats['episode_return'])))
-            np.savetxt(os.path.join(FLAGS.save_dir, 'results.txt'),
+            np.savetxt(os.path.join(FLAGS.save_dir, f'{FLAGS.seed}.txt'),
                        eval_returns)
 
 
