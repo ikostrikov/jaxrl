@@ -25,6 +25,7 @@ flags.DEFINE_integer('log_interval', 1000, 'Logging interval.')
 flags.DEFINE_integer('eval_interval', 5000, 'Eval interval.')
 flags.DEFINE_integer('start_training', int(1e4),
                      'Minimal size of replay buffer to start training.')
+flags.DEFINE_boolean('tqdm', False, 'Use tqdm progress bar.')
 
 
 def main(_):
@@ -56,7 +57,9 @@ def main(_):
     eval_returns = []
 
     done, info, observation = True, {}, np.empty(())
-    for i in tqdm.tqdm(range(FLAGS.max_steps), smoothing=0.1):
+    for i in tqdm.tqdm(range(FLAGS.max_steps),
+                       smoothing=0.1,
+                       disable=not FLAGS.tqdm):
         if done:
             observation = env.reset()
             done = False
