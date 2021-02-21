@@ -90,14 +90,16 @@ def update_actor(
         q1, q2 = critic_def.apply({'params': critic_params},
                                   batch.observations, actions)
         q = jnp.minimum(q1, q2)
-        return (log_probs * alpha - q).mean(), log_probs
+        return (log_probs * alpha - q).mean(), (-log_probs.mean(), q1.mean(),
+                                                q2.mean())
 
     actor_grad_fn = jax.value_and_grad(actor_loss_fn, has_aux=True)
-    (actor_loss, log_probs), actor_grad = actor_grad_fn(actor_optimizer.target)
+    (actor_loss, (entropy, q1,
+                  q2)), actor_grad = actor_grad_fn(actor_optimizer.target)
     actor_optimizer = actor_optimizer.apply_gradient(actor_grad)
 
     def alpha_loss_fn(log_alpha):
-        return jnp.exp(log_alpha) * (-log_probs - target_entropy).mean()
+        return jnp.exp(log_alpha) * (entropy - target_entropy).mean()
 
     alpha_grad_fn = jax.value_and_grad(alpha_loss_fn)
     alpha_loss, alpha_grad = alpha_grad_fn(alpha_optimizer.target)
@@ -106,7 +108,10 @@ def update_actor(
     return (actor_optimizer, alpha_optimizer, {
         'actor_loss': actor_loss,
         'alpha_loss': alpha_loss,
-        'entropy': -log_probs.mean()
+        'alpha': alpha,
+        'entropy': entropy,
+        'q1': q1,
+        'q2': q2
     })
 
 
