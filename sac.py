@@ -6,6 +6,7 @@ import typing
 import flax
 import jax
 import jax.numpy as jnp
+import ml_collections
 import numpy as np
 from flax import linen as nn
 from flax.optim.base import Optimizer
@@ -18,8 +19,18 @@ tfb = tfp.bijectors
 
 PRNGKey = typing.Any
 Params = flax.core.frozen_dict.FrozenDict
+InfoDict = typing.Dict[str, float]
 
 default_init = nn.initializers.orthogonal
+
+
+class State(typing.NamedTuple):
+    actor_optimizer: Optimizer
+    critic_optimizer: Optimizer
+    target_critic_params: Params
+    log_alpha_optimizer: Optimizer
+    rng: PRNGKey
+    step: int = 0
 
 
 class MLP(nn.Module):
@@ -78,34 +89,40 @@ class Actor(nn.Module):
 
 
 def update_actor(
-    actor_def: nn.Module, critic_def: nn.Module, actor_optimizer: Optimizer,
-    alpha_optimizer: Optimizer, critic_params: Params,
-    batch: replay_buffer.Batch, target_entropy: float, key: PRNGKey
-) -> typing.Tuple[Optimizer, Optimizer, typing.Dict[str, float]]:
-    alpha = jnp.exp(alpha_optimizer.target)
+    config: ml_collections.FrozenConfigDict, state: State,
+    batch: replay_buffer.Batch
+) -> typing.Tuple[State, InfoDict]:
+    alpha = jnp.exp(state.log_alpha_optimizer.target)
+    critic_params = state.critic_optimizer.target
+
+    rng, key = jax.random.split(state.rng)
 
     def actor_loss_fn(actor_params):
-        actions, log_probs, _ = actor_def.apply({'params': actor_params},
-                                                batch.observations, 1.0, key)
-        q1, q2 = critic_def.apply({'params': critic_params},
-                                  batch.observations, actions)
+        actions, log_probs, _ = config.actor_def.apply(
+            {'params': actor_params}, batch.observations, 1.0, key)
+        q1, q2 = config.critic_def.apply({'params': critic_params},
+                                         batch.observations, actions)
         q = jnp.minimum(q1, q2)
         return (log_probs * alpha - q).mean(), (-log_probs.mean(), q1.mean(),
                                                 q2.mean())
 
     actor_grad_fn = jax.value_and_grad(actor_loss_fn, has_aux=True)
-    (actor_loss, (entropy, q1,
-                  q2)), actor_grad = actor_grad_fn(actor_optimizer.target)
-    actor_optimizer = actor_optimizer.apply_gradient(actor_grad)
+    ((actor_loss, (entropy, q1, q2)),
+     actor_grad) = actor_grad_fn(state.actor_optimizer.target)
+    actor_optimizer = state.actor_optimizer.apply_gradient(actor_grad)
 
     def alpha_loss_fn(log_alpha):
-        return jnp.exp(log_alpha) * (entropy - target_entropy).mean()
+        return jnp.exp(log_alpha) * (entropy - config.target_entropy).mean()
 
     alpha_grad_fn = jax.value_and_grad(alpha_loss_fn)
-    alpha_loss, alpha_grad = alpha_grad_fn(alpha_optimizer.target)
-    alpha_optimizer = alpha_optimizer.apply_gradient(alpha_grad)
+    alpha_loss, alpha_grad = alpha_grad_fn(state.log_alpha_optimizer.target)
+    log_alpha_optimizer = state.log_alpha_optimizer.apply_gradient(alpha_grad)
 
-    return (actor_optimizer, alpha_optimizer, {
+    state = state._replace(actor_optimizer=actor_optimizer,
+                           log_alpha_optimizer=log_alpha_optimizer,
+                           rng=rng)
+
+    return (state, {
         'actor_loss': actor_loss,
         'alpha_loss': alpha_loss,
         'alpha': alpha,
@@ -115,31 +132,31 @@ def update_actor(
     })
 
 
-def update_critic(
-        actor_def: nn.Module, critic_def: nn.Module,
-        critic_optimizer: Optimizer, actor_params: Params, alpha: float,
-        target_critic_params: Params, batch: replay_buffer.Batch, tau: float,
-        discount: float, key: PRNGKey
-) -> typing.Tuple[Optimizer, Params, typing.Dict[str, float]]:
-    next_actions, next_log_probs, _ = actor_def.apply({'params': actor_params},
-                                                      batch.next_observations,
-                                                      1.0, key)
+def update_critic(config: ml_collections.FrozenConfigDict, state: State,
+                  batch: replay_buffer.Batch) -> typing.Tuple[State, InfoDict]:
+    actor_params = state.actor_optimizer.target
+    alpha = jnp.exp(state.log_alpha_optimizer.target)
 
-    next_q1, next_q2 = critic_def.apply({'params': target_critic_params},
-                                        batch.next_observations, next_actions)
+    rng, key = jax.random.split(state.rng)
+    next_actions, next_log_probs, _ = config.actor_def.apply(
+        {'params': actor_params}, batch.next_observations, 1.0, key)
+
+    next_q1, next_q2 = config.critic_def.apply(
+        {'params': state.target_critic_params}, batch.next_observations,
+        next_actions)
     next_q = jnp.minimum(next_q1, next_q2)
 
-    target_q = batch.rewards + discount * batch.masks * (
+    target_q = batch.rewards + config.discount * batch.masks * (
         next_q - alpha * next_log_probs)
 
     def critic_loss_fn(critic_params):
-        q1, q2 = critic_def.apply({'params': critic_params},
-                                  batch.observations, batch.actions)
+        q1, q2 = config.critic_def.apply({'params': critic_params},
+                                         batch.observations, batch.actions)
         return ((q1 - target_q)**2 + (q2 - target_q)**2).mean()
 
     critic_grad_fn = jax.value_and_grad(critic_loss_fn)
-    critic_loss, critic_grad = critic_grad_fn(critic_optimizer.target)
-    critic_optimizer = critic_optimizer.apply_gradient(critic_grad)
+    critic_loss, critic_grad = critic_grad_fn(state.critic_optimizer.target)
+    critic_optimizer = state.critic_optimizer.apply_gradient(critic_grad)
 
     def soft_update(params: Params, target_params: Params,
                     tau: float) -> Params:
@@ -147,95 +164,75 @@ def update_critic(
                                  params, target_params)
 
     target_critic_params = soft_update(critic_optimizer.target,
-                                       target_critic_params, tau)
+                                       state.target_critic_params, config.tau)
 
-    return critic_optimizer, target_critic_params, {'critic_loss': critic_loss}
+    state = state._replace(critic_optimizer=critic_optimizer,
+                           target_critic_params=target_critic_params,
+                           rng=rng)
+
+    return state, {'critic_loss': critic_loss}
 
 
-@jax.partial(jax.jit, static_argnums=(0, 1))
+@jax.partial(jax.jit, static_argnums=0)
 def update_step_jit(
-    actor_def: nn.Module, critic_def: nn.Module, actor_optimizer: Optimizer,
-    critic_optimizer: Optimizer, alpha_optimizer: Optimizer,
-    target_critic_params: Params, batch: replay_buffer.Batch, tau: float,
-    discount: float, target_entropy: float, rng: PRNGKey
-) -> typing.Tuple[Optimizer, Optimizer, Optimizer, Params, typing.Dict[
-        str, float], PRNGKey]:
+        config: ml_collections.FrozenConfigDict, state: State,
+        batch: replay_buffer.Batch) -> typing.Tuple[State, InfoDict]:
 
-    rng, key = jax.random.split(rng)
-    alpha = jnp.exp(alpha_optimizer.target)
-    critic_optimizer, target_critic_params, critic_info = update_critic(
-        actor_def, critic_def, critic_optimizer, actor_optimizer.target, alpha,
-        target_critic_params, batch, tau, discount, key)
+    state, critic_info = update_critic(config, state, batch)
+    state, actor_info = update_actor(config, state, batch)
 
-    rng, key = jax.random.split(rng)
-    actor_optimizer, alpha_optimizer, actor_info = update_actor(
-        actor_def, critic_def, actor_optimizer, alpha_optimizer,
-        critic_optimizer.target, batch, target_entropy, key)
+    state = state._replace(step=state.step + 1)
 
-    return (actor_optimizer, critic_optimizer, alpha_optimizer,
-            target_critic_params, {
-                **critic_info,
-                **actor_info
-            }, rng)
+    return (state, {**critic_info, **actor_info})
 
 
 class SAC(object):
-    def __init__(self,
-                 observation_dim: int,
-                 action_dim: int,
-                 seed: int,
-                 actor_lr: float = 3e-4,
-                 critic_lr: float = 3e-4,
-                 alpha_lr: float = 3e-4,
-                 discount: float = 0.99,
-                 tau: float = 0.005):
+    def __init__(self, observation_dim: int, action_dim: int, seed: int,
+                 config: ml_collections.ConfigDict):
 
-        self.discount = discount
-        self.tau = tau
+        config = copy.deepcopy(config).unlock()
+        config.actor_def = Actor((256, 256), action_dim)
+        config.critic_def = DoubleCritic((256, 256))
+        config.target_entropy = -action_dim / 2
+        self.config = ml_collections.FrozenConfigDict(config)
 
-        self.rng = jax.random.PRNGKey(seed)
-
-        self.actor_def = Actor((256, 256), action_dim)
-        self.critic_def = DoubleCritic((256, 256))
-        self.actor_apply_jit = jax.jit(self.actor_def.apply)
+        self.actor_apply_jit = jax.jit(self.config.actor_def.apply)
 
         observation_inputs = jnp.zeros((1, observation_dim))
         action_inputs = jnp.zeros((1, action_dim))
 
-        self.rng, key = jax.random.split(self.rng)
-        actor_params = self.actor_def.init(key, observation_inputs, 1.0,
-                                           key)['params']
-        self.rng, key = jax.random.split(self.rng)
-        critic_params = self.critic_def.init(key, observation_inputs,
-                                             action_inputs)['params']
-        self.target_critic_params = copy.deepcopy(critic_params)
+        rng = jax.random.PRNGKey(seed)
+        rng, actor_key, critic_key, input_key = jax.random.split(rng, 4)
+        actor_params = self.config.actor_def.init(actor_key,
+                                                  observation_inputs, 1.0,
+                                                  input_key)['params']
+        critic_params = self.config.critic_def.init(critic_key,
+                                                    observation_inputs,
+                                                    action_inputs)['params']
+        target_critic_params = copy.deepcopy(critic_params)
         log_alpha = jnp.log(1.0)
 
-        self.critic_optimizer = flax.optim.Adam(
-            learning_rate=critic_lr).create(critic_params)
-        self.actor_optimizer = flax.optim.Adam(
-            learning_rate=actor_lr).create(actor_params)
-        self.alpha_optimizer = flax.optim.Adam(
-            learning_rate=alpha_lr).create(log_alpha)
-
-        self.target_entropy = -action_dim / 2
+        self.rng, key = jax.random.split(rng)
+        self.state = State(
+            actor_optimizer=flax.optim.Adam(
+                learning_rate=self.config.actor_lr).create(actor_params),
+            critic_optimizer=flax.optim.Adam(
+                learning_rate=self.config.critic_lr).create(critic_params),
+            target_critic_params=target_critic_params,
+            log_alpha_optimizer=flax.optim.Adam(
+                learning_rate=self.config.alpha_lr).create(log_alpha),
+            rng=key)
 
     def sample_actions(self,
                        observations: np.ndarray,
                        temperature: float = 1.0) -> np.ndarray:
         actions, _, self.rng = self.actor_apply_jit(
-            {'params': self.actor_optimizer.target}, observations, temperature,
-            self.rng)
+            {'params': self.state.actor_optimizer.target}, observations,
+            temperature, self.rng)
         action = np.asarray(actions)
         return np.clip(action, -1.0, 1.0)
 
-    def update_step(self,
-                    batch: replay_buffer.Batch) -> typing.Dict[str, float]:
-        (self.actor_optimizer, self.critic_optimizer, self.alpha_optimizer,
-         self.target_critic_params, info, self.rng) = update_step_jit(
-             self.actor_def, self.critic_def, self.actor_optimizer,
-             self.critic_optimizer, self.alpha_optimizer,
-             self.target_critic_params, batch, self.tau, self.discount,
-             self.target_entropy, self.rng)
+    def update_step(self, batch: replay_buffer.Batch) -> InfoDict:
+        self.state, info = update_step_jit(self.config, self.state, batch)
 
         return info
