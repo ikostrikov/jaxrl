@@ -9,7 +9,8 @@ dependencies:
     - absl-py==0.11.0
     - gym[mujoco]==0.18.0
     - tqdm==4.50.2
-    - flax==0.3.0
+    - optax==0.0.2
+    - dm-haiku=0.0.3
     - jax==0.2.9
     - jaxlib==0.1.59
     - ml_collections=0.1.0
