@@ -7,6 +7,14 @@ import numpy as np
 TimeStep = typing.Tuple[np.ndarray, float, bool, dict]
 
 
+class SinglePrecision(gym.ObservationWrapper):
+    def __init__(self, env):
+        super(SinglePrecision, self).__init__(env)
+
+    def observation(self, observation):
+        return observation.astype(np.float32)
+
+
 class EpisodeMonitor(gym.ActionWrapper):
     """A class that computes episode returns and lengths."""
     def __init__(self, env: gym.Env):

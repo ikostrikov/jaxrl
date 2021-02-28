@@ -35,6 +35,7 @@ def main(_):
         os.makedirs(FLAGS.save_dir)
 
     def wrap(env):
+        env = wrappers.SinglePrecision(env)
         env = RescaleAction(env, -1.0, 1.0)
         return wrappers.EpisodeMonitor(env)
 
@@ -50,7 +51,8 @@ def main(_):
 
     observation_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
-    agent = SAC(observation_dim, action_dim, FLAGS.seed, FLAGS.config)
+    agent = SAC(action_dim, FLAGS.config)
+    state = agent.initial_state(FLAGS.seed, observation_dim, action_dim)
     replay_buffer = ReplayBuffer(observation_dim, action_dim,
                                  FLAGS.config.max_steps)
 
@@ -73,8 +75,7 @@ def main(_):
         if i < FLAGS.config.start_training:
             action = env.action_space.sample()
         else:
-            action = agent.sample_actions(observation[np.newaxis])
-            action = np.squeeze(action, axis=0)
+            state, action = agent.sample_action(state, observation)
 
         next_observation, reward, done, info = env.step(action)
 
@@ -89,7 +90,7 @@ def main(_):
 
         if i >= FLAGS.config.start_training:
             batch = replay_buffer.sample(FLAGS.config.batch_size)
-            update_info = agent.update_step(batch)
+            state, update_info = agent.update(state, batch)
 
             if (i + 1) % FLAGS.log_interval == 0:
                 for k, v in update_info.items():
@@ -100,9 +101,9 @@ def main(_):
             for _ in range(FLAGS.eval_episodes):
                 eval_observation = eval_env.reset()
                 while True:
-                    action = agent.sample_actions(eval_observation[np.newaxis],
-                                                  temperature=0.0)
-                    action = np.squeeze(action, axis=0)
+                    state, action = agent.sample_action(state,
+                                                        eval_observation,
+                                                        temperature=0.0)
                     eval_observation, _, eval_done, eval_info = eval_env.step(
                         action)
                     if eval_done:
