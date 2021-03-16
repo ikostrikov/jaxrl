@@ -8,8 +8,8 @@ from ml_collections import config_flags
 from tensorboardX import SummaryWriter
 
 from jax_rl.agents import SACLearner
+from jax_rl.datasets import ReplayBuffer
 from jax_rl.evaluation import evaluate
-from jax_rl.replay_buffer import ReplayBuffer
 from jax_rl.utils import make_env
 
 FLAGS = flags.FLAGS

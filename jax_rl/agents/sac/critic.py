@@ -4,8 +4,8 @@ import jax
 import jax.numpy as jnp
 
 from jax_rl.agents.actor_critic_temp import ActorCriticTemp
+from jax_rl.datasets import Batch
 from jax_rl.networks.common import InfoDict, Params
-from jax_rl.replay_buffer import Batch
 
 
 def target_update(sac: ActorCriticTemp, tau: float,

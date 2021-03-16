@@ -9,9 +9,9 @@ import numpy as np
 
 from jax_rl.agents.actor_critic_temp import ActorCriticTemp
 from jax_rl.agents.sac import actor, critic, temperature
-from jax_rl.networks import critic_net, policy
+from jax_rl.datasets import Batch
+from jax_rl.networks import critic_net, policies
 from jax_rl.networks.common import InfoDict, create_model
-from jax_rl.replay_buffer import Batch
 
 
 @jax.partial(jax.jit, static_argnums=(2, 3, 4, 5))
@@ -58,8 +58,9 @@ class SACLearner(object):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, temp_key = jax.random.split(rng, 4)
 
-        actor = create_model(policy.NormalTanhPolicy(hidden_dims, action_dim),
-                             [actor_key, observations])
+        actor = create_model(
+            policies.NormalTanhPolicy(hidden_dims, action_dim),
+            [actor_key, observations])
         actor = actor.with_optimizer(flax.optim.Adam(learning_rate=actor_lr))
 
         critic = create_model(critic_net.DoubleCritic(hidden_dims),
@@ -82,9 +83,9 @@ class SACLearner(object):
     def sample_actions(self,
                        observations: np.ndarray,
                        temperature: float = 1.0) -> jnp.ndarray:
-        rng, actions = policy.sample_actions(self.sac.rng, self.sac.actor.fn,
-                                             self.sac.actor.optimizer.target,
-                                             observations, temperature)
+        rng, actions = policies.sample_actions(self.sac.rng, self.sac.actor.fn,
+                                               self.sac.actor.optimizer.target,
+                                               observations, temperature)
 
         self.sac = self.sac.replace(rng=rng)
 

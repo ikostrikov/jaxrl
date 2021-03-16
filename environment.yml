@@ -19,6 +19,6 @@ dependencies:
     - tensorflow_probability==0.12.1
     - imageio==2.9.0
     - imageio-ffmpeg==0.4.3
-    - git+git://github.com/deepmind/dm_control.git
+    - git+https://github.com/rail-berkeley/d4rl@master#egg=d4rl
     - git+git://github.com/denisyarats/dmc2gym.git
 prefix: $HOME/anaconda3

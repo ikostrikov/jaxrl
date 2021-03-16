@@ -1,6 +1,9 @@
-# Jax (Flax) Soft Actor Critic
+# Jax (Flax) RL
 
-This is a Jax (Flax) implementation of [Soft Actor Critic with learnable temperature](https://arxiv.org/abs/1812.05905).
+This is a Jax (Flax) implementation of Reinforcement Learning algorithms:
+
+* [Soft Actor Critic with learnable temperature](https://arxiv.org/abs/1812.05905)
+* Behavioral Cloning
 
 The goal of this repository is to provide a simple and clean implementation to build research on top of. **Please do not use this repository for baseline results and use the original implementation of SAC instead.**
 
@@ -28,6 +31,12 @@ DeepMind Control suite (--env-name=dmc-domain-task)
 
 ```bash
 python train.py --env_name=dmc-cheetah-run --save_dir=./tmp/
+```
+
+For offline RL
+
+```bash
+python train_offline.py --env_name=halfcheetah-expert-v0 --save_dir=./tmp/
 ```
 
 # Tensorboard
