@@ -1,11 +1,12 @@
 # Jax (Flax) RL
 
-This is a Jax (Flax) implementation of Reinforcement Learning algorithms:
+This repository contains Jax (Flax) implementations of Reinforcement Learning algorithms:
 
 * [Soft Actor Critic with learnable temperature](https://arxiv.org/abs/1812.05905)
+* [Advantage Weighted Actor Critic](https://arxiv.org/abs/2006.09359)
 * Behavioral Cloning
 
-The goal of this repository is to provide a simple and clean implementation to build research on top of. **Please do not use this repository for baseline results and use the original implementation of SAC instead.**
+The goal of this repository is to provide simple and clean implementations to build research on top of. **Please do not use this repository for baseline results and use the original implementations instead.**
 
 # Installation
 
@@ -36,7 +37,13 @@ python train.py --env_name=dmc-cheetah-run --save_dir=./tmp/
 For offline RL
 
 ```bash
-python train_offline.py --env_name=halfcheetah-expert-v0 --save_dir=./tmp/
+python train_offline.py --env_name=halfcheetah-expert-v0  --dataset_name=d4rl --save_dir=./tmp/
+```
+
+For RL finetuning
+
+```bash
+python train_finetuning.py --env_name=HalfCheetah-v2 --dataset_name=awac --save_dir=./tmp/
 ```
 
 # Tensorboard

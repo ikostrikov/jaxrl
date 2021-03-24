@@ -6,7 +6,8 @@ import jax.numpy as jnp
 import numpy as np
 from tensorflow_probability.substrates import jax as tfp
 
-from jax_rl.networks.common import MLP, Params, PRNGKey, default_init
+from jax_rl.networks.common import (MLP, Parameter, Params, PRNGKey,
+                                    default_init)
 
 tfd = tfp.distributions
 tfb = tfp.bijectors
@@ -15,6 +16,7 @@ tfb = tfp.bijectors
 class NormalTanhPolicy(nn.Module):
     hidden_dims: Sequence[int]
     action_dim: int
+    state_dependent_std: bool = True
 
     @nn.compact
     def __call__(self,
@@ -24,8 +26,12 @@ class NormalTanhPolicy(nn.Module):
 
         means = nn.Dense(self.action_dim,
                          kernel_init=default_init(1e-3))(outputs)
-        log_stds = nn.Dense(self.action_dim,
-                            kernel_init=default_init(1e-3))(outputs)
+
+        if self.state_dependent_std:
+            log_stds = nn.Dense(self.action_dim,
+                                kernel_init=default_init(1e-3))(outputs)
+        else:
+            log_stds = Parameter(shape=(self.action_dim, ))()
 
         log_stds = jnp.clip(log_stds, -20.0, 2.0)
 

@@ -19,7 +19,7 @@ def _update_jit(sac: ActorCriticTemp, batch: Batch, discount: float,
                 tau: float, target_update_period: int,
                 target_entropy: float) -> Tuple[ActorCriticTemp, InfoDict]:
 
-    sac, critic_info = critic.update(sac, batch, discount)
+    sac, critic_info = critic.update(sac, batch, discount, soft_critic=True)
     sac = critic.target_update(sac, tau, target_update_period)
 
     sac, actor_info = actor.update(sac, batch)
