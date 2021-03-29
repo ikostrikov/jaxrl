@@ -46,6 +46,14 @@ For RL finetuning
 python train_finetuning.py --env_name=HalfCheetah-v2 --dataset_name=awac --save_dir=./tmp/
 ```
 
+# Troubleshooting
+
+If you experience out-of-memory errors, especially with enabled video saving, please consider reading [docs](https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html#gpu-memory-allocation) on Jax GPU memory allocation. Also, you can try running with the following environment variable:
+
+```bash
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.80 python ...
+```
+
 # Tensorboard
 
 Launch tensorboard to see training and evaluation logs

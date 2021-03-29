@@ -35,6 +35,16 @@ class VideoRecorder(gym.Wrapper):
         frame = self.env.render(mode='rgb_array',
                                 height=self.height,
                                 width=self.width)
+
+        if frame is None:
+            try:
+                frame = self.sim.render(width=self.width,
+                                        height=self.height,
+                                        mode='offscreen')
+                frame = np.flipud(frame)
+            except:
+                raise NotImplementedError('Rendering is not implemented.')
+
         self.frames.append(frame)
 
         observation, reward, done, info = self.env.step(action)
