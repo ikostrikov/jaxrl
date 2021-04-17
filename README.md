@@ -54,6 +54,11 @@ If you experience out-of-memory errors, especially with enabled video saving, pl
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.80 python ...
 ```
 
+If you run your code on a remote machine and want to save videos for DeepMind Control Suite, please use EGL for rendering:
+```bash
+MUJOCO_GL=egl python train.py --env_name=dmc-cheetah-run --save_dir=./tmp/ --save_video
+```
+
 # Tensorboard
 
 Launch tensorboard to see training and evaluation logs
