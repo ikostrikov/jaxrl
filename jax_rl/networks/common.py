@@ -5,11 +5,11 @@ import flax
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-from flax.optim.base import Optimizer
+import optax
 
 default_init = nn.initializers.orthogonal
 PRNGKey = Any
-Params = flax.core.FrozenDict
+Params = flax.core.FrozenDict[str, Any]
 PRNGKey = Any
 Shape = Sequence[int]
 Dtype = Any  # this could be a real type?
@@ -39,42 +39,61 @@ class Parameter(nn.Module):
         return self.param('parameter', self.init, self.shape)
 
 
+# TODO: Replace with TrainState when it's ready
+# https://github.com/google/flax/blob/master/docs/flip/1009-optimizer-api.md#train-state
 @flax.struct.dataclass
 class Model:
-    fn: nn.Module = flax.struct.field(pytree_node=False)
-    params: Optional[Params] = None
-    optimizer: Optional[Optimizer] = None
+    step: int
+    apply_fn: nn.Module = flax.struct.field(pytree_node=False)
+    params: Params
+    tx: Optional[optax.GradientTransformation] = flax.struct.field(
+        pytree_node=False)
+    opt_state: Optional[optax.OptState] = None
 
-    def with_optimizer(self, optim_def):
-        optimizer = optim_def.create(self.params)
-        return self.replace(params=None, optimizer=optimizer)
+    @classmethod
+    def create(cls,
+               model_def: nn.Module,
+               inputs: Sequence[jnp.ndarray],
+               tx: Optional[optax.GradientTransformation] = None) -> 'Model':
+        variables = model_def.init(*inputs)
+
+        _, params = variables.pop('params')
+
+        if tx is not None:
+            opt_state = tx.init(params)
+        else:
+            opt_state = None
+
+        return cls(step=1,
+                   apply_fn=model_def,
+                   params=params,
+                   tx=tx,
+                   opt_state=opt_state)
 
     def __call__(self, *args, **kwargs):
-        return self.fn.apply({'params': self.params or self.optimizer.target},
-                             *args, **kwargs)
+        return self.apply_fn.apply({'params': self.params}, *args, **kwargs)
 
     def apply(self, *args, **kwargs):
-        return self.fn.apply(*args, **kwargs)
+        return self.apply_fn.apply(*args, **kwargs)
 
     def apply_gradient(self, loss_fn) -> Tuple[Any, 'Model']:
         grad_fn = jax.grad(loss_fn, has_aux=True)
-        grad, info = grad_fn(self.optimizer.target)
-        new_optimizer = self.optimizer.apply_gradient(grad)
-        return self.replace(optimizer=new_optimizer), info
+        grads, info = grad_fn(self.params)
+
+        updates, new_opt_state = self.tx.update(grads, self.opt_state,
+                                                self.params)
+        new_params = optax.apply_updates(self.params, updates)
+
+        return self.replace(step=self.step + 1,
+                            params=new_params,
+                            opt_state=new_opt_state), info
 
     def save(self, save_path: str):
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, 'wb') as f:
-            params = self.params or self.optimizer.target
-            f.write(flax.serialization.to_bytes(params))
+            f.write(flax.serialization.to_bytes(self.params))
 
     def load(self, load_path: str) -> 'Model':
         with open(load_path, 'rb') as f:
-            params = self.params or self.optimizer.target
-            params = flax.serialization.from_bytes(params, f.read())
-        return self.replace(params=params, optimizer=None)
-
-
-def create_model(model_def: nn.Module, inputs: Sequence[jnp.ndarray]) -> Model:
-    params = model_def.init(*inputs)['params']
-    return Model(model_def, params=params)
+            params = flax.serialization.from_bytes(self.params, f.read())
+        return self.replace(params=params)

@@ -6,12 +6,13 @@ import flax
 import jax
 import jax.numpy as jnp
 import numpy as np
+import optax
 
 from jax_rl.agents.actor_critic_temp import ActorCriticTemp
 from jax_rl.agents.sac import actor, critic, temperature
 from jax_rl.datasets import Batch
 from jax_rl.networks import critic_net, policies
-from jax_rl.networks.common import InfoDict, create_model
+from jax_rl.networks.common import InfoDict, Model
 
 
 @jax.partial(jax.jit, static_argnums=(2, 3, 4, 5))
@@ -58,21 +59,21 @@ class SACLearner(object):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, temp_key = jax.random.split(rng, 4)
 
-        actor = create_model(
-            policies.NormalTanhPolicy(hidden_dims, action_dim),
-            [actor_key, observations])
-        actor = actor.with_optimizer(flax.optim.Adam(learning_rate=actor_lr))
+        actor_def = policies.NormalTanhPolicy(hidden_dims, action_dim)
+        actor = Model.create(actor_def,
+                             inputs=[actor_key, observations],
+                             tx=optax.adam(learning_rate=actor_lr))
 
-        critic = create_model(critic_net.DoubleCritic(hidden_dims),
-                              [critic_key, observations, actions])
-        critic = critic.with_optimizer(
-            flax.optim.Adam(learning_rate=critic_lr))
-        target_critic = create_model(critic_net.DoubleCritic(hidden_dims),
-                                     [critic_key, observations, actions])
+        critic_def = critic_net.DoubleCritic(hidden_dims)
+        critic = Model.create(critic_def,
+                              inputs=[critic_key, observations, actions],
+                              tx=optax.adam(learning_rate=critic_lr))
+        target_critic = Model.create(
+            critic_def, inputs=[critic_key, observations, actions])
 
-        temp = create_model(temperature.Temperature(init_temperature),
-                            [temp_key])
-        temp = temp.with_optimizer(flax.optim.Adam(learning_rate=temp_lr))
+        temp = Model.create(temperature.Temperature(init_temperature),
+                            inputs=[temp_key],
+                            tx=optax.adam(learning_rate=temp_lr))
 
         self.sac = ActorCriticTemp(actor=actor,
                                    critic=critic,
@@ -83,10 +84,10 @@ class SACLearner(object):
     def sample_actions(self,
                        observations: np.ndarray,
                        temperature: float = 1.0) -> jnp.ndarray:
-        rng, actions = policies.sample_actions(self.sac.rng, self.sac.actor.fn,
-                                               self.sac.actor.optimizer.target,
+        rng, actions = policies.sample_actions(self.sac.rng,
+                                               self.sac.actor.apply_fn,
+                                               self.sac.actor.params,
                                                observations, temperature)
-
         self.sac = self.sac.replace(rng=rng)
 
         actions = np.asarray(actions)

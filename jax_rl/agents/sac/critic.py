@@ -10,18 +10,15 @@ from jax_rl.networks.common import InfoDict, Params
 
 def target_update(sac: ActorCriticTemp, tau: float,
                   target_update_period: int) -> ActorCriticTemp:
-    # A mix of soft and hard target updates.
-    params = sac.critic.optimizer.target
-
     if tau < 1:
         new_target_params = jax.tree_multimap(
-            lambda p, tp: p * tau + tp * (1 - tau), params,
+            lambda p, tp: p * tau + tp * (1 - tau), sac.critic.params,
             sac.target_critic.params)
     else:
-        new_target_params = params
+        new_target_params = sac.critic.params
 
     if target_update_period > 1:
-        step = sac.critic.optimizer.state.step
+        step = sac.critic.step
         new_target_params = jax.lax.cond(step % target_update_period == 0,
                                          lambda _: new_target_params,
                                          lambda _: sac.target_critic.params,

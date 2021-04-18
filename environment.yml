@@ -16,6 +16,7 @@ dependencies:
     - jax==0.2.9
     - jaxlib==0.1.59
     - ml_collections==0.1.0
+    - optax==0.0.6
     - tensorboardX==2.2
     - tensorflow_probability==0.12.1
     - imageio==2.9.0

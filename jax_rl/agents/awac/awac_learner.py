@@ -6,13 +6,14 @@ import flax
 import jax
 import jax.numpy as jnp
 import numpy as np
+import optax
 
 import jax_rl.agents.awac.actor as awr_actor
 import jax_rl.agents.sac.critic as sac_critic
 from jax_rl.agents.actor_critic_temp import ActorCriticTemp
 from jax_rl.datasets import Batch
 from jax_rl.networks import critic_net, policies
-from jax_rl.networks.common import InfoDict, create_model
+from jax_rl.networks.common import InfoDict, Model
 
 
 @jax.partial(jax.jit, static_argnums=(2, 3, 4, 5, 6))
@@ -61,20 +62,21 @@ class AWACLearner(object):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key = jax.random.split(rng, 3)
 
-        actor = create_model(
-            policies.NormalTanhPolicy(actor_hidden_dims,
-                                      action_dim,
-                                      state_dependent_std=state_dependent_std),
-            [actor_key, observations])
-        actor = actor.with_optimizer(flax.optim.Adam(**actor_optim_kwargs))
+        actor_def = policies.NormalTanhPolicy(
+            actor_hidden_dims,
+            action_dim,
+            state_dependent_std=state_dependent_std)
+        actor = Model.create(actor_def,
+                             inputs=[actor_key, observations],
+                             tx=optax.adamw(**actor_optim_kwargs))
 
-        critic = create_model(critic_net.DoubleCritic(critic_hidden_dims),
-                              [critic_key, observations, actions])
-        critic = critic.with_optimizer(
-            flax.optim.Adam(learning_rate=critic_lr))
-        target_critic = create_model(
-            critic_net.DoubleCritic(critic_hidden_dims),
-            [critic_key, observations, actions])
+        critic_def = critic_net.DoubleCritic(critic_hidden_dims)
+        critic = Model.create(critic_def,
+                              inputs=[critic_key, observations, actions],
+                              tx=optax.adam(learning_rate=critic_lr))
+
+        target_critic = Model.create(
+            critic_def, inputs=[critic_key, observations, actions])
 
         self.models = ActorCriticTemp(actor=actor,
                                       critic=critic,
@@ -85,9 +87,10 @@ class AWACLearner(object):
     def sample_actions(self,
                        observations: np.ndarray,
                        temperature: float = 1.0) -> jnp.ndarray:
-        rng, actions = policies.sample_actions(
-            self.models.rng, self.models.actor.fn,
-            self.models.actor.optimizer.target, observations, temperature)
+        rng, actions = policies.sample_actions(self.models.rng,
+                                               self.models.actor.apply_fn,
+                                               self.models.actor.params,
+                                               observations, temperature)
 
         self.models = self.models.replace(rng=rng)
 
