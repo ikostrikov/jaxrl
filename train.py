@@ -92,7 +92,8 @@ def main(_):
         if done:
             observation, done = env.reset(), False
             for k, v in info['episode'].items():
-                summary_writer.add_scalar(f'training/{k}', v, i)
+                summary_writer.add_scalar(f'training/{k}', v,
+                                          info['total']['timesteps'])
 
         if i >= FLAGS.start_training:
             batch = replay_buffer.sample(FLAGS.batch_size)
@@ -107,10 +108,12 @@ def main(_):
             eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
 
             for k, v in eval_stats.items():
-                summary_writer.add_scalar(f'evaluation/average_{k}s', v, i)
+                summary_writer.add_scalar(f'evaluation/average_{k}s', v,
+                                          info['total']['timesteps'])
             summary_writer.flush()
 
-            eval_returns.append((i, eval_stats['return']))
+            eval_returns.append(
+                (info['total']['timesteps'], eval_stats['return']))
             np.savetxt(os.path.join(FLAGS.save_dir, f'{FLAGS.seed}.txt'),
                        eval_returns,
                        fmt=['%d', '%.1f'])

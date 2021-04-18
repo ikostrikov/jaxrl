@@ -28,10 +28,10 @@ OpenAI Gym MuJoCo tasks
 python train.py --env_name=HalfCheetah-v2 --save_dir=./tmp/
 ```
 
-DeepMind Control suite (--env-name=dmc-domain-task)
+DeepMind Control suite (--env-name=domain-task)
 
 ```bash
-python train.py --env_name=dmc-cheetah-run --save_dir=./tmp/
+python train.py --env_name=cheetah-run --save_dir=./tmp/
 ```
 
 For offline RL

@@ -22,5 +22,4 @@ dependencies:
     - imageio==2.9.0
     - imageio-ffmpeg==0.4.3
     - git+https://github.com/rail-berkeley/d4rl@master#egg=d4rl
-    - git+git://github.com/denisyarats/dmc2gym.git
 prefix: $HOME/anaconda3
