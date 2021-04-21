@@ -1,16 +1,13 @@
 from typing import Sequence, Tuple
 
+import distrax
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import numpy as np
-from tensorflow_probability.substrates import jax as tfp
 
 from jax_rl.networks.common import (MLP, Parameter, Params, PRNGKey,
                                     default_init)
-
-tfd = tfp.distributions
-tfb = tfp.bijectors
 
 
 class NormalTanhPolicy(nn.Module):
@@ -21,7 +18,7 @@ class NormalTanhPolicy(nn.Module):
     @nn.compact
     def __call__(self,
                  observations: jnp.ndarray,
-                 temperature: float = 1.0) -> tfd.TransformedDistribution:
+                 temperature: float = 1.0) -> distrax.Distribution:
         outputs = MLP(self.hidden_dims, activate_final=True)(observations)
 
         means = nn.Dense(self.action_dim,
@@ -35,11 +32,10 @@ class NormalTanhPolicy(nn.Module):
 
         log_stds = jnp.clip(log_stds, -20.0, 2.0)
 
-        base_dist = tfd.MultivariateNormalDiag(loc=means,
-                                               scale_diag=jnp.exp(log_stds) *
-                                               temperature)
-        return tfd.TransformedDistribution(distribution=base_dist,
-                                           bijector=tfb.Tanh())
+        base_dist = distrax.MultivariateNormalDiag(
+            loc=means, scale_diag=jnp.exp(log_stds) * temperature)
+        return distrax.Transformed(distribution=base_dist,
+                                   bijector=distrax.Block(distrax.Tanh(), 1))
 
 
 class NormalTanhMixturePolicy(nn.Module):
@@ -50,7 +46,7 @@ class NormalTanhMixturePolicy(nn.Module):
     @nn.compact
     def __call__(self,
                  observations: jnp.ndarray,
-                 temperature: float = 1.0) -> tfd.TransformedDistribution:
+                 temperature: float = 1.0) -> distrax.Distribution:
         outputs = MLP(self.hidden_dims, activate_final=True)(observations)
 
         logits = nn.Dense(self.action_dim * self.num_components,
@@ -67,15 +63,18 @@ class NormalTanhMixturePolicy(nn.Module):
         log_stds = jnp.reshape(log_stds, shape)
         log_stds = jnp.clip(log_stds, -20.0, 2.0)
 
-        components_distribution = tfd.TransformedDistribution(
-            tfd.Normal(loc=mu, scale=jnp.exp(log_stds) * temperature),
-            tfp.bijectors.Tanh())
+        components_distribution = distrax.Normal(loc=mu,
+                                                 scale=jnp.exp(log_stds) *
+                                                 temperature)
 
-        distribution = tfd.MixtureSameFamily(
-            mixture_distribution=tfd.Categorical(logits=logits),
+        base_dist = distrax.MixtureSameFamily(
+            mixture_distribution=distrax.Categorical(logits=logits),
             components_distribution=components_distribution)
 
-        return tfd.Independent(distribution)
+        dist = distrax.Transformed(distribution=base_dist,
+                                   bijector=distrax.Tanh())
+
+        return distrax.Independent(dist, 1)
 
 
 @jax.partial(jax.jit, static_argnums=1)

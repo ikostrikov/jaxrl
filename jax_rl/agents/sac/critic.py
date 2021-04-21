@@ -33,14 +33,13 @@ def update(sac: ActorCriticTemp, batch: Batch, discount: float,
            soft_critic: bool) -> Tuple[ActorCriticTemp, InfoDict]:
     dist = sac.actor(batch.next_observations)
     rng, key = jax.random.split(sac.rng)
-    next_actions = dist.sample(seed=key)
+    next_actions, next_log_probs = dist.sample_and_log_prob(seed=key)
     next_q1, next_q2 = sac.target_critic(batch.next_observations, next_actions)
     next_q = jnp.minimum(next_q1, next_q2)
 
     target_q = batch.rewards + discount * batch.masks * next_q
 
     if soft_critic:
-        next_log_probs = dist.log_prob(next_actions)
         target_q -= discount * batch.masks * sac.temp() * next_log_probs
 
     def critic_loss_fn(critic_params: Params) -> Tuple[jnp.ndarray, InfoDict]:
