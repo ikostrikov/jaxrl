@@ -9,6 +9,12 @@ import numpy as np
 from jax_rl.networks.common import (MLP, Parameter, Params, PRNGKey,
                                     default_init)
 
+LOG_STD_MIN = -10.0
+LOG_STD_MAX = 2.0
+
+# Policies are initialized to have near zero mean and small variance
+# as recommended in https://arxiv.org/pdf/2006.05990.pdf
+
 
 class NormalTanhPolicy(nn.Module):
     hidden_dims: Sequence[int]
@@ -26,11 +32,13 @@ class NormalTanhPolicy(nn.Module):
 
         if self.state_dependent_std:
             log_stds = nn.Dense(self.action_dim,
-                                kernel_init=default_init(1e-3))(outputs)
+                                kernel_init=default_init())(outputs)
         else:
             log_stds = Parameter(shape=(self.action_dim, ))()
 
-        log_stds = jnp.clip(log_stds, -20.0, 2.0)
+        log_stds = nn.tanh(log_stds)
+        LOG_STD_RANGE = LOG_STD_MAX - LOG_STD_MIN
+        log_stds = LOG_STD_MIN + 0.5 * LOG_STD_RANGE * (log_stds + 1)
 
         base_dist = distrax.MultivariateNormalDiag(
             loc=means, scale_diag=jnp.exp(log_stds) * temperature)
@@ -55,13 +63,16 @@ class NormalTanhMixturePolicy(nn.Module):
                          kernel_init=default_init(1e-3),
                          bias_init=nn.initializers.normal(stddev=1.0))(outputs)
         log_stds = nn.Dense(self.action_dim * self.num_components,
-                            kernel_init=default_init(1e-3))(outputs)
+                            kernel_init=default_init())(outputs)
 
         shape = list(observations.shape[:-1]) + [-1, self.num_components]
         logits = jnp.reshape(logits, shape)
         mu = jnp.reshape(means, shape)
         log_stds = jnp.reshape(log_stds, shape)
-        log_stds = jnp.clip(log_stds, -20.0, 2.0)
+
+        log_stds = nn.tanh(log_stds)
+        LOG_STD_RANGE = LOG_STD_MAX - LOG_STD_MIN
+        log_stds = LOG_STD_MIN + 0.5 * LOG_STD_RANGE * (log_stds + 1)
 
         components_distribution = distrax.Normal(loc=mu,
                                                  scale=jnp.exp(log_stds) *
