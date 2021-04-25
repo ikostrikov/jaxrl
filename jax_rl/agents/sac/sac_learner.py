@@ -17,11 +17,12 @@ from jax_rl.networks.common import InfoDict, Model
 
 @jax.partial(jax.jit, static_argnums=(2, 3, 4, 5))
 def _update_jit(sac: ActorCriticTemp, batch: Batch, discount: float,
-                tau: float, target_update_period: int,
-                target_entropy: float) -> Tuple[ActorCriticTemp, InfoDict]:
+                tau: float, target_entropy: float,
+                update_target: bool) -> Tuple[ActorCriticTemp, InfoDict]:
 
     sac, critic_info = critic.update(sac, batch, discount, soft_critic=True)
-    sac = critic.target_update(sac, tau, target_update_period)
+    if update_target:
+        sac = critic.target_update(sac, tau)
 
     sac, actor_info = actor.update(sac, batch)
     sac, alpha_info = temperature.update(sac, actor_info['entropy'],
@@ -80,6 +81,7 @@ class SACLearner(object):
                                    target_critic=target_critic,
                                    temp=temp,
                                    rng=rng)
+        self.step = 1
 
     def sample_actions(self,
                        observations: np.ndarray,
@@ -94,7 +96,8 @@ class SACLearner(object):
         return np.clip(actions, -1, 1)
 
     def update(self, batch: Batch) -> InfoDict:
-        self.sac, info = _update_jit(self.sac, batch, self.discount, self.tau,
-                                     self.target_update_period,
-                                     self.target_entropy)
+        self.step += 1
+        self.sac, info = _update_jit(
+            self.sac, batch, self.discount, self.tau, self.target_entropy,
+            self.step % self.target_update_period == 0)
         return info

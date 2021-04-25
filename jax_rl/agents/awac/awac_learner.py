@@ -18,14 +18,15 @@ from jax_rl.networks.common import InfoDict, Model
 
 @jax.partial(jax.jit, static_argnums=(2, 3, 4, 5, 6))
 def _update_jit(models: ActorCriticTemp, batch: Batch, discount: float,
-                tau: float, target_update_period: int, num_samples: int,
-                beta: float) -> Tuple[ActorCriticTemp, InfoDict]:
+                tau: float, num_samples: int, beta: float,
+                update_target: bool) -> Tuple[ActorCriticTemp, InfoDict]:
 
     models, critic_info = sac_critic.update(models,
                                             batch,
                                             discount,
                                             soft_critic=False)
-    models = sac_critic.target_update(models, tau, target_update_period)
+    if update_target:
+        models = sac_critic.target_update(models, tau)
 
     models, actor_info = awr_actor.update(models, batch, num_samples, beta)
 
@@ -83,6 +84,7 @@ class AWACLearner(object):
                                       target_critic=target_critic,
                                       temp=None,
                                       rng=rng)
+        self.step = 1
 
     def sample_actions(self,
                        observations: np.ndarray,
@@ -98,7 +100,8 @@ class AWACLearner(object):
         return np.clip(actions, -1, 1)
 
     def update(self, batch: Batch) -> InfoDict:
-        self.models, info = _update_jit(self.models, batch, self.discount,
-                                        self.tau, self.target_update_period,
-                                        self.num_samples, self.beta)
+        self.step += 1
+        self.models, info = _update_jit(
+            self.models, batch, self.discount, self.tau, self.num_samples,
+            self.beta, self.step % self.target_update_period == 0)
         return info

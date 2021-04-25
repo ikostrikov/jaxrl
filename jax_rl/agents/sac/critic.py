@@ -8,21 +8,10 @@ from jax_rl.datasets import Batch
 from jax_rl.networks.common import InfoDict, Params
 
 
-def target_update(sac: ActorCriticTemp, tau: float,
-                  target_update_period: int) -> ActorCriticTemp:
-    if tau < 1:
-        new_target_params = jax.tree_multimap(
-            lambda p, tp: p * tau + tp * (1 - tau), sac.critic.params,
-            sac.target_critic.params)
-    else:
-        new_target_params = sac.critic.params
-
-    if target_update_period > 1:
-        step = sac.critic.step
-        new_target_params = jax.lax.cond(step % target_update_period == 0,
-                                         lambda _: new_target_params,
-                                         lambda _: sac.target_critic.params,
-                                         operand=None)
+def target_update(sac: ActorCriticTemp, tau: float) -> ActorCriticTemp:
+    new_target_params = jax.tree_multimap(
+        lambda p, tp: p * tau + tp * (1 - tau), sac.critic.params,
+        sac.target_critic.params)
 
     new_target_critic = sac.target_critic.replace(params=new_target_params)
 
