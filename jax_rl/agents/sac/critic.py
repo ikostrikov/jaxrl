@@ -23,8 +23,12 @@ def update(sac: ActorCriticTemp, batch: Batch, discount: float,
     dist = sac.actor(batch.next_observations)
     rng, key = jax.random.split(sac.rng)
     next_actions, next_log_probs = dist.sample_and_log_prob(seed=key)
-    next_q1, next_q2 = sac.target_critic(batch.next_observations, next_actions)
-    next_q = jnp.minimum(next_q1, next_q2)
+    next_qs = sac.target_critic(batch.next_observations, next_actions)
+
+    rng, key = jax.random.split(rng)
+    next_qs = jnp.stack(next_qs, 0)
+    next_qs = jax.random.shuffle(key, next_qs, 0)
+    next_q = jnp.min(next_qs[:2], axis=0)
 
     target_q = batch.rewards + discount * batch.masks * next_q
 
@@ -32,14 +36,16 @@ def update(sac: ActorCriticTemp, batch: Batch, discount: float,
         target_q -= discount * batch.masks * sac.temp() * next_log_probs
 
     def critic_loss_fn(critic_params: Params) -> Tuple[jnp.ndarray, InfoDict]:
-        q1, q2 = sac.critic.apply({'params': critic_params},
-                                  batch.observations, batch.actions)
-        critic_loss = ((q1 - target_q)**2 + (q2 - target_q)**2).mean()
-        return critic_loss, {
-            'critic_loss': critic_loss,
-            'q1': q1.mean(),
-            'q2': q2.mean()
-        }
+        qs = sac.critic.apply({'params': critic_params}, batch.observations,
+                              batch.actions)
+        critic_loss = 0
+
+        for q in qs:
+            critic_loss += (q - target_q)**2
+
+        critic_loss = critic_loss.mean()
+
+        return critic_loss, {'critic_loss': critic_loss, 'q': qs[0].mean()}
 
     new_critic, info = sac.critic.apply_gradient(critic_loss_fn)
 

@@ -1,6 +1,6 @@
 """Implementations of algorithms for continuous control."""
 
-from typing import Sequence, Tuple
+from typing import Callable, Sequence, Tuple
 
 import jax.numpy as jnp
 from flax import linen as nn
@@ -21,10 +21,13 @@ class Critic(nn.Module):
 
 class DoubleCritic(nn.Module):
     hidden_dims: Sequence[int]
+    N: int = 10
+    reduce: Callable[[Sequence[jnp.ndarray]], jnp.ndarray] = jnp.minimum
 
     @nn.compact
     def __call__(self, observations: jnp.ndarray,
                  actions: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray]:
-        critic1 = Critic(self.hidden_dims)(observations, actions)
-        critic2 = Critic(self.hidden_dims)(observations, actions)
-        return critic1, critic2
+        critics = []
+        for _ in range(self.N):
+            critics.append(Critic(self.hidden_dims)(observations, actions))
+        return critics
