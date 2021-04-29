@@ -16,7 +16,7 @@ def update(sac: ActorCriticTemp,
         dist = sac.actor.apply({'params': actor_params}, batch.observations)
         actions, log_probs = dist.sample_and_log_prob(seed=key)
         q1, q2 = sac.critic(batch.observations, actions)
-        q = (q1 + q2) / 2
+        q = jnp.minimum(q1, q2)
         actor_loss = (log_probs * sac.temp() - q).mean()
         return actor_loss, {
             'actor_loss': actor_loss,

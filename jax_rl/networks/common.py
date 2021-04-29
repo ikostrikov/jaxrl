@@ -7,7 +7,11 @@ import jax
 import jax.numpy as jnp
 import optax
 
-default_init = nn.initializers.orthogonal
+
+def default_init(scale: Optional[float] = jnp.sqrt(2)):
+    return nn.initializers.orthogonal(scale)
+
+
 PRNGKey = Any
 Params = flax.core.FrozenDict[str, Any]
 PRNGKey = Any

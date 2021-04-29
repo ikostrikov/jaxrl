@@ -12,9 +12,6 @@ from jax_rl.networks.common import (MLP, Parameter, Params, PRNGKey,
 LOG_STD_MIN = -10.0
 LOG_STD_MAX = 2.0
 
-# Policies are initialized to have near zero mean and small variance
-# as recommended in https://arxiv.org/pdf/2006.05990.pdf
-
 
 class NormalTanhPolicy(nn.Module):
     hidden_dims: Sequence[int]
@@ -27,8 +24,7 @@ class NormalTanhPolicy(nn.Module):
                  temperature: float = 1.0) -> distrax.Distribution:
         outputs = MLP(self.hidden_dims, activate_final=True)(observations)
 
-        means = nn.Dense(self.action_dim,
-                         kernel_init=default_init(1e-3))(outputs)
+        means = nn.Dense(self.action_dim, kernel_init=default_init())(outputs)
 
         if self.state_dependent_std:
             log_stds = nn.Dense(self.action_dim,
@@ -36,9 +32,7 @@ class NormalTanhPolicy(nn.Module):
         else:
             log_stds = Parameter(shape=(self.action_dim, ))()
 
-        log_stds = nn.tanh(log_stds)
-        LOG_STD_RANGE = LOG_STD_MAX - LOG_STD_MIN
-        log_stds = LOG_STD_MIN + 0.5 * LOG_STD_RANGE * (log_stds + 1)
+        log_stds = jnp.clip(log_stds, LOG_STD_MIN, LOG_STD_MAX)
 
         base_dist = distrax.MultivariateNormalDiag(
             loc=means, scale_diag=jnp.exp(log_stds) * temperature)
@@ -58,9 +52,9 @@ class NormalTanhMixturePolicy(nn.Module):
         outputs = MLP(self.hidden_dims, activate_final=True)(observations)
 
         logits = nn.Dense(self.action_dim * self.num_components,
-                          kernel_init=default_init(1e-3))(outputs)
+                          kernel_init=default_init())(outputs)
         means = nn.Dense(self.action_dim * self.num_components,
-                         kernel_init=default_init(1e-3),
+                         kernel_init=default_init(),
                          bias_init=nn.initializers.normal(stddev=1.0))(outputs)
         log_stds = nn.Dense(self.action_dim * self.num_components,
                             kernel_init=default_init())(outputs)
@@ -70,9 +64,7 @@ class NormalTanhMixturePolicy(nn.Module):
         mu = jnp.reshape(means, shape)
         log_stds = jnp.reshape(log_stds, shape)
 
-        log_stds = nn.tanh(log_stds)
-        LOG_STD_RANGE = LOG_STD_MAX - LOG_STD_MIN
-        log_stds = LOG_STD_MIN + 0.5 * LOG_STD_RANGE * (log_stds + 1)
+        log_stds = jnp.clip(log_stds, LOG_STD_MIN, LOG_STD_MAX)
 
         components_distribution = distrax.Normal(loc=mu,
                                                  scale=jnp.exp(log_stds) *

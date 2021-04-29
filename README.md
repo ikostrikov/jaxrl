@@ -4,9 +4,15 @@ This repository contains Jax (Flax) implementations of Reinforcement Learning al
 
 * [Soft Actor Critic with learnable temperature](https://arxiv.org/abs/1812.05905)
 * [Advantage Weighted Actor Critic](https://arxiv.org/abs/2006.09359)
+* [Image Augmentation Is All You Need](https://arxiv.org/abs/2004.13649)(only [K=1, M=1])
 * Behavioral Cloning
 
 The goal of this repository is to provide simple and clean implementations to build research on top of. **Please do not use this repository for baseline results and use the original implementations instead.**
+
+# Changelog
+
+## April 29th, 2021
+- Added an implementation of data augmentation from [Image Augmentation Is All You Need](https://arxiv.org/abs/2004.13649)
 
 # Installation
 
@@ -32,6 +38,12 @@ DeepMind Control suite (--env-name=domain-task)
 
 ```bash
 python train.py --env_name=cheetah-run --save_dir=./tmp/
+```
+
+For continuous control from pixels
+
+```bash
+MUJOCO_GL=egl python train_pixels.py --env_name=cheetah-run --save_dir=./tmp/
 ```
 
 For offline RL
