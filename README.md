@@ -81,7 +81,13 @@ tensorboard --logdir=./tmp/
 
 # Results
 
+## Continous control from states
+
 ![gym](./learning_curves/images/results.png)
+
+## Continous control from pixels
+
+![gym](./learning_curves/images/results_drq.png)
 
 # Contributing
 
