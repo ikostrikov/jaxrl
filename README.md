@@ -68,7 +68,7 @@ XLA_PYTHON_CLIENT_MEM_FRACTION=0.80 python ...
 
 If you run your code on a remote machine and want to save videos for DeepMind Control Suite, please use EGL for rendering:
 ```bash
-MUJOCO_GL=egl python train.py --env_name=dmc-cheetah-run --save_dir=./tmp/ --save_video
+MUJOCO_GL=egl python train.py --env_name=cheetah-run --save_dir=./tmp/ --save_video
 ```
 
 # Tensorboard
