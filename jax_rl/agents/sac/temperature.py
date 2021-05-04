@@ -4,7 +4,7 @@ import jax.numpy as jnp
 from flax import linen as nn
 
 from jax_rl.agents.actor_critic_temp import ActorCriticTemp
-from jax_rl.networks.common import InfoDict, Parameter
+from jax_rl.networks.common import InfoDict
 
 
 class Temperature(nn.Module):
@@ -12,8 +12,10 @@ class Temperature(nn.Module):
 
     @nn.compact
     def __call__(self) -> jnp.ndarray:
-        log_temp = Parameter(shape=())()
-        return jnp.exp(log_temp + jnp.log(self.initial_temperature))
+        log_temp = self.param('log_temp',
+                              init_fn=lambda key: jnp.full(
+                                  (), jnp.log(self.initial_temperature)))
+        return jnp.exp(log_temp)
 
 
 def update(sac: ActorCriticTemp, entropy: float,

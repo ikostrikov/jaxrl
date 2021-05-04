@@ -6,8 +6,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from jax_rl.networks.common import (MLP, Parameter, Params, PRNGKey,
-                                    default_init)
+from jax_rl.networks.common import MLP, Params, PRNGKey, default_init
 
 LOG_STD_MIN = -10.0
 LOG_STD_MAX = 2.0
@@ -30,7 +29,8 @@ class NormalTanhPolicy(nn.Module):
             log_stds = nn.Dense(self.action_dim,
                                 kernel_init=default_init())(outputs)
         else:
-            log_stds = Parameter(shape=(self.action_dim, ))()
+            log_stds = self.param('log_stds', nn.initializers.zeros,
+                                  (self.action_dim, ))
 
         log_stds = jnp.clip(log_stds, LOG_STD_MIN, LOG_STD_MAX)
 

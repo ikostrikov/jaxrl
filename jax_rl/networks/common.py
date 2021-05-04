@@ -33,16 +33,6 @@ class MLP(nn.Module):
         return x
 
 
-class Parameter(nn.Module):
-    shape: Shape
-    init: Callable[[PRNGKey, Shape, Dtype],
-                   jnp.ndarray] = nn.initializers.zeros
-
-    @nn.compact
-    def __call__(self) -> jnp.ndarray:
-        return self.param('parameter', self.init, self.shape)
-
-
 # TODO: Replace with TrainState when it's ready
 # https://github.com/google/flax/blob/master/docs/flip/1009-optimizer-api.md#train-state
 @flax.struct.dataclass
