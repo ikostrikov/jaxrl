@@ -56,6 +56,10 @@ class DrQLearner(object):
                  critic_lr: float = 3e-4,
                  temp_lr: float = 3e-4,
                  hidden_dims: Sequence[int] = (256, 256),
+                 cnn_features: Sequence[int] = (32, 32, 32, 32),
+                 cnn_strides: Sequence[int] = (2, 1, 1, 1),
+                 cnn_padding: str = 'VALID',
+                 latent_dim: int = 50,
                  discount: float = 0.99,
                  tau: float = 0.005,
                  target_update_period: int = 1,
@@ -76,12 +80,14 @@ class DrQLearner(object):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, temp_key = jax.random.split(rng, 4)
 
-        actor_def = DrQPolicy(hidden_dims, action_dim)
+        actor_def = DrQPolicy(hidden_dims, action_dim, cnn_features,
+                              cnn_strides, cnn_padding, latent_dim)
         actor = Model.create(actor_def,
                              inputs=[actor_key, observations],
                              tx=optax.adam(learning_rate=actor_lr))
 
-        critic_def = DrQDoubleCritic(hidden_dims)
+        critic_def = DrQDoubleCritic(hidden_dims, cnn_features, cnn_strides,
+                                     cnn_padding, latent_dim)
         critic = Model.create(critic_def,
                               inputs=[critic_key, observations, actions],
                               tx=optax.adam(learning_rate=critic_lr))

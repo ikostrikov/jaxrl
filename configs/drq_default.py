@@ -12,6 +12,11 @@ def get_config():
 
     config.hidden_dims = (256, 256)
 
+    config.cnn_features = (32, 32, 32, 32)
+    config.cnn_strides = (2, 1, 1, 1)
+    config.cnn_padding = 'VALID'
+    config.latent_dim = 50
+
     config.discount = 0.99
 
     config.tau = 0.005

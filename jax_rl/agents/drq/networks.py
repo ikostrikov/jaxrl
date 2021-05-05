@@ -13,6 +13,7 @@ from jax_rl.networks.policies import NormalTanhPolicy
 class Encoder(nn.Module):
     features: Sequence[int] = (32, 32, 32, 32)
     strides: Sequence[int] = (2, 1, 1, 1)
+    padding: str = 'VALID'
 
     @nn.compact
     def __call__(self, observations: jnp.ndarray) -> jnp.ndarray:
@@ -24,7 +25,7 @@ class Encoder(nn.Module):
                         kernel_size=(3, 3),
                         strides=(stride, stride),
                         kernel_init=default_init(),
-                        padding='VALID')(x)
+                        padding=self.padding)(x)
             x = nn.relu(x)
 
         if len(x.shape) == 4:
@@ -36,12 +37,18 @@ class Encoder(nn.Module):
 
 class DrQDoubleCritic(nn.Module):
     hidden_dims: Sequence[int]
+    cnn_features: Sequence[int] = (32, 32, 32, 32)
+    cnn_strides: Sequence[int] = (2, 1, 1, 1)
+    cnn_padding: str = 'VALID'
     latent_dim: int = 50
 
     @nn.compact
     def __call__(self, observations: jnp.ndarray,
                  actions: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray]:
-        x = Encoder(name='SharedEncoder')(observations)
+        x = Encoder(self.cnn_features,
+                    self.cnn_strides,
+                    self.cnn_padding,
+                    name='SharedEncoder')(observations)
 
         x = nn.Dense(self.latent_dim)(x)
         x = nn.LayerNorm()(x)
@@ -53,13 +60,19 @@ class DrQDoubleCritic(nn.Module):
 class DrQPolicy(nn.Module):
     hidden_dims: Sequence[int]
     action_dim: int
+    cnn_features: Sequence[int] = (32, 32, 32, 32)
+    cnn_strides: Sequence[int] = (2, 1, 1, 1)
+    cnn_padding: str = 'VALID'
     latent_dim: int = 50
 
     @nn.compact
     def __call__(self,
                  observations: jnp.ndarray,
                  temperature: float = 1.0) -> distrax.Distribution:
-        x = Encoder(name='SharedEncoder')(observations)
+        x = Encoder(self.cnn_features,
+                    self.cnn_strides,
+                    self.cnn_padding,
+                    name='SharedEncoder')(observations)
 
         # We do not update conv layers with policy gradients.
         x = jax.lax.stop_gradient(x)
