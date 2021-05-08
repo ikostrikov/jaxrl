@@ -44,13 +44,9 @@ def main(_):
                                         FLAGS.dataset_name, video_save_folder)
 
     kwargs = dict(FLAGS.config)
-    algo = kwargs.pop('algo')
-    if algo == 'bc':
-        agent = BCLearner(FLAGS.seed,
-                          env.observation_space.sample()[np.newaxis],
-                          env.action_space.sample()[np.newaxis], **kwargs)
-    else:
-        raise NotImplementedError()
+    agent = BCLearner(FLAGS.seed,
+                      env.observation_space.sample()[np.newaxis],
+                      env.action_space.sample()[np.newaxis], **kwargs)
 
     eval_returns = []
     for i in tqdm.tqdm(range(1, FLAGS.max_steps + 1),

@@ -4,7 +4,7 @@ import ml_collections
 def get_config():
     config = ml_collections.ConfigDict()
 
-    config.algo = 'bc'
+    config.distribution = 'made'  # mog or made
 
     config.actor_lr = 3e-4
     config.hidden_dims = (256, 256)

@@ -10,7 +10,7 @@ import optax
 
 from jax_rl.agents.bc import actor
 from jax_rl.datasets import Batch
-from jax_rl.networks import policies
+from jax_rl.networks import autoregressive_policy, policies
 from jax_rl.networks.common import InfoDict, Model
 
 _update_jit = jax.jit(actor.update)
@@ -22,13 +22,20 @@ class BCLearner(object):
                  observations: jnp.ndarray,
                  actions: jnp.ndarray,
                  actor_lr: float = 3e-4,
-                 hidden_dims: Sequence[int] = (256, 256)):
+                 hidden_dims: Sequence[int] = (256, 256),
+                 distribution: str = 'mog'):
 
         rng = jax.random.PRNGKey(seed)
         rng, actor_key = jax.random.split(rng)
 
         action_dim = actions.shape[-1]
-        actor_def = policies.NormalTanhMixturePolicy(hidden_dims, action_dim)
+        if distribution == 'mog':
+            actor_def = policies.NormalTanhMixturePolicy(
+                hidden_dims, action_dim)
+        else:
+            actor_def = autoregressive_policy.MADETanhMixturePolicy(
+                hidden_dims, action_dim)
+
         self.actor = Model.create(actor_def,
                                   inputs=[actor_key, observations],
                                   tx=optax.adam(learning_rate=actor_lr))
