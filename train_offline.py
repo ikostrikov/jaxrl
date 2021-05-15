@@ -44,6 +44,7 @@ def main(_):
                                         FLAGS.dataset_name, video_save_folder)
 
     kwargs = dict(FLAGS.config)
+    kwargs['num_steps'] = FLAGS.max_steps
     agent = BCLearner(FLAGS.seed,
                       env.observation_space.sample()[np.newaxis],
                       env.action_space.sample()[np.newaxis], **kwargs)

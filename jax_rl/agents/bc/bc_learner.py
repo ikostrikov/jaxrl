@@ -21,7 +21,8 @@ class BCLearner(object):
                  seed: int,
                  observations: jnp.ndarray,
                  actions: jnp.ndarray,
-                 actor_lr: float = 3e-4,
+                 actor_lr: float = 1e-3,
+                 num_steps: int = int(1e6),
                  hidden_dims: Sequence[int] = (256, 256),
                  distribution: str = 'mog'):
 
@@ -36,9 +37,13 @@ class BCLearner(object):
             actor_def = autoregressive_policy.MADETanhMixturePolicy(
                 hidden_dims, action_dim)
 
+        schedule_fn = optax.cosine_decay_schedule(-actor_lr, num_steps)
+        optimiser = optax.chain(optax.scale_by_adam(),
+                                optax.scale_by_schedule(schedule_fn))
+
         self.actor = Model.create(actor_def,
                                   inputs=[actor_key, observations],
-                                  tx=optax.adam(learning_rate=actor_lr))
+                                  tx=optimiser)
         self.rng = rng
 
     def sample_actions(self,
