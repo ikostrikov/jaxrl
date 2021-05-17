@@ -8,27 +8,44 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 
-from jax_rl.agents.actor_critic_temp import ActorCriticTemp
-from jax_rl.agents.sac import actor, critic, temperature
+from jax_rl.agents.sac import temperature
+from jax_rl.agents.sac.actor import update as update_actor
+from jax_rl.agents.sac.critic import target_update
+from jax_rl.agents.sac.critic import update as update_critic
 from jax_rl.datasets import Batch
 from jax_rl.networks import critic_net, policies
-from jax_rl.networks.common import InfoDict, Model
+from jax_rl.networks.common import InfoDict, Model, PRNGKey
 
 
-@jax.partial(jax.jit, static_argnums=(2, 3, 4, 5))
-def _update_jit(sac: ActorCriticTemp, batch: Batch, discount: float,
-                tau: float, target_entropy: float,
-                update_target: bool) -> Tuple[ActorCriticTemp, InfoDict]:
+@jax.partial(jax.jit, static_argnums=(6, 7, 8, 9))
+def _update_jit(
+    rng: PRNGKey, actor: Model, critic: Model, target_critic: Model,
+    temp: Model, batch: Batch, discount: float, tau: float,
+    target_entropy: float, update_target: bool
+) -> Tuple[PRNGKey, Model, Model, Model, Model, InfoDict]:
 
-    sac, critic_info = critic.update(sac, batch, discount, soft_critic=True)
+    rng, key = jax.random.split(rng)
+    new_critic, critic_info = update_critic(key,
+                                            actor,
+                                            critic,
+                                            target_critic,
+                                            temp,
+                                            batch,
+                                            discount,
+                                            soft_critic=True)
     if update_target:
-        sac = critic.target_update(sac, tau)
+        new_target_critic = target_update(new_critic, target_critic, tau)
 
-    sac, actor_info = actor.update(sac, batch)
-    sac, alpha_info = temperature.update(sac, actor_info['entropy'],
-                                         target_entropy)
+    rng, key = jax.random.split(rng)
+    new_actor, actor_info = update_actor(key, actor, new_critic, temp, batch)
+    new_temp, alpha_info = temperature.update(temp, actor_info['entropy'],
+                                              target_entropy)
 
-    return sac, {**critic_info, **actor_info, **alpha_info}
+    return rng, new_actor, new_critic, new_target_critic, new_temp, {
+        **critic_info,
+        **actor_info,
+        **alpha_info
+    }
 
 
 class SACLearner(object):
@@ -76,28 +93,37 @@ class SACLearner(object):
                             inputs=[temp_key],
                             tx=optax.adam(learning_rate=temp_lr))
 
-        self.sac = ActorCriticTemp(actor=actor,
-                                   critic=critic,
-                                   target_critic=target_critic,
-                                   temp=temp,
-                                   rng=rng)
+        self.actor = actor
+        self.critic = critic
+        self.target_critic = target_critic
+        self.temp = temp
+        self.rng = rng
+
         self.step = 1
 
     def sample_actions(self,
                        observations: np.ndarray,
                        temperature: float = 1.0) -> jnp.ndarray:
-        rng, actions = policies.sample_actions(self.sac.rng,
-                                               self.sac.actor.apply_fn,
-                                               self.sac.actor.params,
-                                               observations, temperature)
-        self.sac = self.sac.replace(rng=rng)
+        rng, actions = policies.sample_actions(self.rng, self.actor.apply_fn,
+                                               self.actor.params, observations,
+                                               temperature)
+        self.rng = rng
 
         actions = np.asarray(actions)
         return np.clip(actions, -1, 1)
 
     def update(self, batch: Batch) -> InfoDict:
         self.step += 1
-        self.sac, info = _update_jit(
-            self.sac, batch, self.discount, self.tau, self.target_entropy,
+
+        new_rng, new_actor, new_critic, new_target_critic, new_temp, info = _update_jit(
+            self.rng, self.actor, self.critic, self.target_critic, self.temp,
+            batch, self.discount, self.tau, self.target_entropy,
             self.step % self.target_update_period == 0)
+
+        self.rng = new_rng
+        self.actor = new_actor
+        self.critic = new_critic
+        self.target_critic = new_target_critic
+        self.temp = new_temp
+
         return info

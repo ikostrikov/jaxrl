@@ -10,27 +10,39 @@ import optax
 
 import jax_rl.agents.awac.actor as awr_actor
 import jax_rl.agents.sac.critic as sac_critic
-from jax_rl.agents.actor_critic_temp import ActorCriticTemp
 from jax_rl.datasets import Batch
 from jax_rl.networks import critic_net, policies
-from jax_rl.networks.common import InfoDict, Model
+from jax_rl.networks.common import InfoDict, Model, PRNGKey
 
 
-@jax.partial(jax.jit, static_argnums=(2, 3, 4, 5, 6))
-def _update_jit(models: ActorCriticTemp, batch: Batch, discount: float,
-                tau: float, num_samples: int, beta: float,
-                update_target: bool) -> Tuple[ActorCriticTemp, InfoDict]:
+@jax.partial(jax.jit, static_argnums=(5, 6, 7, 8, 9))
+def _update_jit(
+        rng: PRNGKey, actor: Model, critic: Model, target_critic: Model,
+        batch: Batch, discount: float, tau: float, num_samples: int,
+        beta: float,
+        update_target: bool) -> Tuple[PRNGKey, Model, Model, Model, InfoDict]:
 
-    models, critic_info = sac_critic.update(models,
-                                            batch,
-                                            discount,
-                                            soft_critic=False)
+    rng, key = jax.random.split(rng)
+    new_critic, critic_info = sac_critic.update(key,
+                                                actor,
+                                                critic,
+                                                target_critic,
+                                                None,
+                                                batch,
+                                                discount,
+                                                soft_critic=False)
     if update_target:
-        models = sac_critic.target_update(models, tau)
+        new_target_critic = sac_critic.target_update(new_critic, target_critic,
+                                                     tau)
 
-    models, actor_info = awr_actor.update(models, batch, num_samples, beta)
+    rng, key = jax.random.split(rng)
+    new_actor, actor_info = awr_actor.update(key, actor, new_critic, batch,
+                                             num_samples, beta)
 
-    return models, {**critic_info, **actor_info}
+    return rng, new_actor, new_critic, new_target_critic, {
+        **critic_info,
+        **actor_info
+    }
 
 
 class AWACLearner(object):
@@ -79,29 +91,34 @@ class AWACLearner(object):
         target_critic = Model.create(
             critic_def, inputs=[critic_key, observations, actions])
 
-        self.models = ActorCriticTemp(actor=actor,
-                                      critic=critic,
-                                      target_critic=target_critic,
-                                      temp=None,
-                                      rng=rng)
+        self.actor = actor
+        self.critic = critic
+        self.target_critic = target_critic
+        self.rng = rng
         self.step = 1
 
     def sample_actions(self,
                        observations: np.ndarray,
                        temperature: float = 1.0) -> jnp.ndarray:
-        rng, actions = policies.sample_actions(self.models.rng,
-                                               self.models.actor.apply_fn,
-                                               self.models.actor.params,
-                                               observations, temperature)
+        rng, actions = policies.sample_actions(self.rng, self.actor.apply_fn,
+                                               self.actor.params, observations,
+                                               temperature)
 
-        self.models = self.models.replace(rng=rng)
+        self.rng = rng
 
         actions = np.asarray(actions)
         return np.clip(actions, -1, 1)
 
     def update(self, batch: Batch) -> InfoDict:
         self.step += 1
-        self.models, info = _update_jit(
-            self.models, batch, self.discount, self.tau, self.num_samples,
-            self.beta, self.step % self.target_update_period == 0)
+        new_rng, new_actor, new_critic, new_target_network, info = _update_jit(
+            self.rng, self.actor, self.critic, self.target_critic, batch,
+            self.discount, self.tau, self.num_samples, self.beta,
+            self.step % self.target_update_period == 0)
+
+        self.rng = new_rng
+        self.actor = new_actor
+        self.critic = new_critic
+        self.target_critic = new_target_network
+
         return info

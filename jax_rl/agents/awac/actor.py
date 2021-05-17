@@ -3,25 +3,24 @@ from typing import Tuple
 import jax
 import jax.numpy as jnp
 
-from jax_rl.agents.actor_critic_temp import ActorCriticTemp
 from jax_rl.agents.awac.value import get_value
 from jax_rl.datasets import Batch
-from jax_rl.networks.common import InfoDict, Params
+from jax_rl.networks.common import InfoDict, Model, Params, PRNGKey
 
 
-def update(models: ActorCriticTemp, batch: Batch, num_samples: int,
-           beta: float) -> Tuple[ActorCriticTemp, InfoDict]:
+def update(key: PRNGKey, actor: Model, critic: Model, batch: Batch,
+           num_samples: int, beta: float) -> Tuple[Model, InfoDict]:
 
-    models, v1, v2 = get_value(models, batch, num_samples, soft_value=False)
+    v1, v2 = get_value(key, actor, critic, batch, num_samples)
     v = jnp.minimum(v1, v2)
 
     def actor_loss_fn(actor_params: Params) -> Tuple[jnp.ndarray, InfoDict]:
-        dist = models.actor.apply({'params': actor_params}, batch.observations)
+        dist = actor.apply({'params': actor_params}, batch.observations)
         lim = 1 - 1e-5
         actions = jnp.clip(batch.actions, -lim, lim)
         log_probs = dist.log_prob(actions)
 
-        q1, q2 = models.critic(batch.observations, actions)
+        q1, q2 = critic(batch.observations, actions)
         q = jnp.minimum(q1, q2)
         a = q - v
 
@@ -33,8 +32,6 @@ def update(models: ActorCriticTemp, batch: Batch, num_samples: int,
 
         return actor_loss, {'actor_loss': actor_loss}
 
-    new_actor, info = models.actor.apply_gradient(actor_loss_fn)
+    new_actor, info = actor.apply_gradient(actor_loss_fn)
 
-    new_models = models.replace(actor=new_actor)
-
-    return new_models, info
+    return new_actor, info

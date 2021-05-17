@@ -3,8 +3,7 @@ from typing import Tuple
 import jax.numpy as jnp
 from flax import linen as nn
 
-from jax_rl.agents.actor_critic_temp import ActorCriticTemp
-from jax_rl.networks.common import InfoDict
+from jax_rl.networks.common import InfoDict, Model
 
 
 class Temperature(nn.Module):
@@ -18,15 +17,13 @@ class Temperature(nn.Module):
         return jnp.exp(log_temp)
 
 
-def update(sac: ActorCriticTemp, entropy: float,
-           target_entropy: float) -> Tuple[ActorCriticTemp, InfoDict]:
+def update(temp: Model, entropy: float,
+           target_entropy: float) -> Tuple[Model, InfoDict]:
     def temperature_loss_fn(temp_params):
-        temperature = sac.temp.apply({'params': temp_params})
+        temperature = temp.apply({'params': temp_params})
         temp_loss = temperature * (entropy - target_entropy).mean()
         return temp_loss, {'temperature': temperature, 'temp_loss': temp_loss}
 
-    new_temp, info = sac.temp.apply_gradient(temperature_loss_fn)
+    new_temp, info = temp.apply_gradient(temperature_loss_fn)
 
-    new_sac = sac.replace(temp=new_temp)
-
-    return new_sac, info
+    return new_temp, info
