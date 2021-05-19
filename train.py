@@ -7,7 +7,7 @@ from absl import app, flags
 from ml_collections import config_flags
 from tensorboardX import SummaryWriter
 
-from jax_rl.agents import AWACLearner, SACLearner
+from jax_rl.agents import AWACLearner, SACLearner, SACV1Learner
 from jax_rl.datasets import ReplayBuffer
 from jax_rl.evaluation import evaluate
 from jax_rl.utils import make_env
@@ -58,6 +58,10 @@ def main(_):
         agent = SACLearner(FLAGS.seed,
                            env.observation_space.sample()[np.newaxis],
                            env.action_space.sample()[np.newaxis], **kwargs)
+    elif algo == 'sac_v1':
+        agent = SACV1Learner(FLAGS.seed,
+                             env.observation_space.sample()[np.newaxis],
+                             env.action_space.sample()[np.newaxis], **kwargs)
     elif algo == 'awac':
         agent = AWACLearner(FLAGS.seed,
                             env.observation_space.sample()[np.newaxis],

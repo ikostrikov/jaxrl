@@ -11,6 +11,9 @@ The goal of this repository is to provide simple and clean implementations to bu
 
 # Changelog
 
+## May 19th, 2021
+- Added an implementation of [Soft Actor Critic v1](https://arxiv.org/abs/1801.01290)
+
 ## April 29th, 2021
 - Added an implementation of data augmentation from [Image Augmentation Is All You Need](https://arxiv.org/abs/2004.13649)
 
