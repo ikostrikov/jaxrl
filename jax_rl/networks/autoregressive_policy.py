@@ -1,10 +1,14 @@
 import enum
 import typing
 
-import distrax
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
+from tensorflow_probability.python.internal import reparameterization
+from tensorflow_probability.substrates import jax as tfp
+
+tfd = tfp.distributions
+tfb = tfp.bijectors
 
 LOG_STD_MIN = -10.0
 LOG_STD_MAX = 2.0
@@ -101,18 +105,27 @@ class MaskedMLP(nn.Module):
         return x
 
 
-class Autoregressive(distrax.Distribution):
+class Autoregressive(tfd.Distribution):
     def __init__(self, distr_fn: typing.Callable[[jnp.ndarray],
-                                                 distrax.Distribution],
+                                                 tfd.Distribution],
                  batch_shape: typing.Tuple[int], event_dim: int):
+        super().__init__(
+            dtype=jnp.float32,
+            reparameterization_type=reparameterization.FULLY_REPARAMETERIZED,
+            validate_args=False,
+            allow_nan_stats=True)
+
         self._distr_fn = distr_fn
         self._event_dim = event_dim
-        self._batch_shape = batch_shape
+        self.__batch_shape = batch_shape
 
-    def _sample_n(self, key, n: int) -> jnp.ndarray:
-        keys = jax.random.split(key, self._event_dim)
+    def _batch_shape(self):
+        return self.__batch_shape
 
-        samples = jnp.zeros((n, *self._batch_shape, self._event_dim),
+    def _sample_n(self, n: int, seed: jnp.ndarray) -> jnp.ndarray:
+        keys = jax.random.split(seed, self._event_dim)
+
+        samples = jnp.zeros((n, *self._batch_shape(), self._event_dim),
                             jnp.float32)
 
         # TODO: Consider rewriting it with nn.scan.
@@ -128,8 +141,8 @@ class Autoregressive(distrax.Distribution):
         return self._distr_fn(values).log_prob(values)
 
     @property
-    def event_shape(self) -> typing.Tuple[int, ...]:
-        return (self._event_dim, )
+    def event_shape(self) -> int:
+        return self._event_dim
 
 
 class MADETanhMixturePolicy(nn.Module):
@@ -140,7 +153,7 @@ class MADETanhMixturePolicy(nn.Module):
     @nn.compact
     def __call__(self,
                  states: jnp.ndarray,
-                 temperature: float = 1.0) -> distrax.Distribution:
+                 temperature: float = 1.0) -> tfd.Distribution:
         is_initializing = not self.has_variable('params', 'means')
         masked_mlp = MaskedMLP(
             (*self.features, 3 * self.num_components * self.action_dim))
@@ -152,7 +165,7 @@ class MADETanhMixturePolicy(nn.Module):
                                 states.dtype)
             masked_mlp(actions, states)
 
-        def distr_fn(actions: jnp.ndarray) -> distrax.Distribution:
+        def distr_fn(actions: jnp.ndarray) -> tfd.Distribution:
             outputs = masked_mlp(actions, states)
             means, log_scales, logits = jnp.split(outputs, 3, axis=-1)
             means = means + means_init
@@ -169,13 +182,12 @@ class MADETanhMixturePolicy(nn.Module):
             log_scales = reshape(log_scales)
             logits = reshape(logits)
 
-            dist = distrax.Normal(loc=means,
-                                  scale=jnp.exp(log_scales) * temperature)
+            dist = tfd.Normal(loc=means,
+                              scale=jnp.exp(log_scales) * temperature)
 
-            dist = distrax.MixtureSameFamily(
-                distrax.Categorical(logits=logits), dist)
+            dist = tfd.MixtureSameFamily(tfd.Categorical(logits=logits), dist)
 
-            return distrax.Independent(dist, reinterpreted_batch_ndims=1)
+            return tfd.Independent(dist, reinterpreted_batch_ndims=1)
 
         dist = Autoregressive(distr_fn, states.shape[:-1], self.action_dim)
-        return distrax.Transformed(dist, distrax.Block(distrax.Tanh(), 1))
+        return tfd.TransformedDistribution(dist, tfb.Tanh())

@@ -19,7 +19,8 @@ def update(key: PRNGKey, actor: Model, critic: Model, target_critic: Model,
            temp: Model, batch: Batch, discount: float,
            soft_critic: bool) -> Tuple[Model, InfoDict]:
     dist = actor(batch.next_observations)
-    next_actions, next_log_probs = dist.sample_and_log_prob(seed=key)
+    next_actions = dist.sample(seed=key)
+    next_log_probs = dist.log_prob(next_actions)
     next_q1, next_q2 = target_critic(batch.next_observations, next_actions)
     next_q = jnp.minimum(next_q1, next_q2)
 

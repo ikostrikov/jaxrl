@@ -11,7 +11,8 @@ def update(key: PRNGKey, actor: Model, critic: Model, temp: Model,
            batch: Batch) -> Tuple[Model, InfoDict]:
     def actor_loss_fn(actor_params: Params) -> Tuple[jnp.ndarray, InfoDict]:
         dist = actor.apply({'params': actor_params}, batch.observations)
-        actions, log_probs = dist.sample_and_log_prob(seed=key)
+        actions = dist.sample(seed=key)
+        log_probs = dist.log_prob(actions)
         q1, q2 = critic(batch.observations, actions)
         q = jnp.minimum(q1, q2)
         actor_loss = (log_probs * temp() - q).mean()

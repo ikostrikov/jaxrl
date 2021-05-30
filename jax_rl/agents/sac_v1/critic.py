@@ -10,7 +10,8 @@ def update_v(key: PRNGKey, actor: Model, critic: Model, value: Model,
              temp: Model, batch: Batch,
              soft_critic: bool) -> Tuple[Model, InfoDict]:
     dist = actor(batch.observations)
-    actions, log_probs = dist.sample_and_log_prob(seed=key)
+    actions = dist.sample(seed=key)
+    log_probs = dist.log_prob(actions)
     q1, q2 = critic(batch.observations, actions)
     target_v = jnp.minimum(q1, q2)
 

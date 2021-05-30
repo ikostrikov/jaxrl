@@ -1,9 +1,11 @@
 from typing import Sequence, Tuple
 
-import distrax
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
+from tensorflow_probability.substrates import jax as tfp
+
+tfd = tfp.distributions
 
 from jax_rl.networks.common import default_init
 from jax_rl.networks.critic_net import DoubleCritic
@@ -68,7 +70,7 @@ class DrQPolicy(nn.Module):
     @nn.compact
     def __call__(self,
                  observations: jnp.ndarray,
-                 temperature: float = 1.0) -> distrax.Distribution:
+                 temperature: float = 1.0) -> tfd.Distribution:
         x = Encoder(self.cnn_features,
                     self.cnn_strides,
                     self.cnn_padding,
