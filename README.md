@@ -92,6 +92,24 @@ tensorboard --logdir=./tmp/
 
 ![gym](./learning_curves/images/results_drq.png)
 
+
+# Docker
+
+Build
+
+Copy your MuJoCo key to ./vendor
+
+```bash
+docker build -t ikostrikov/jax-rl . -f remote/Dockerfile 
+```
+
+Test
+```bash
+docker run -v <code-dir>:/jax_rl/ --gpus=all dockers/jax python /jax_rl/train.py --env_name=HalfCheetah-v2 --save_dir=/jax_rl/tmp/
+```
+
+
+
 # Contributing
 
 When contributing to this repository, please first discuss the change you wish to make via issue. If you are not familiar with pull requests, please read [this documentation](https://opensource.com/article/19/7/create-pull-request-github).

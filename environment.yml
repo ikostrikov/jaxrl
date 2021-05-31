@@ -4,7 +4,7 @@ channels:
 dependencies:
   - python=3.8
   - patchelf==0.12
-  - pip==21.1.2
+  - pip==21.1.1
   - numpy=1.19.2
   - scipy=1.6.0
   - pip:
