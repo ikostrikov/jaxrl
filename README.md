@@ -19,47 +19,18 @@ The goal of this repository is to provide simple and clean implementations to bu
 
 # Installation
 
-Install and activate an Anaconda environment
 ```bash
-conda env create -f environment.yml 
-conda activate jax-rl
+conda install patchelf
+pip install --upgrade git+https://github.com/ikostrikov/jax-rl@main#egg
+# For GPU support run
+pip install --upgrade jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
 
 If you want to run this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
 
 Please follow [the instructions](https://github.com/openai/mujoco-py/pull/583/files) to build mujoco-py with fast headless GPU rendering.
 
-# Run
-
-OpenAI Gym MuJoCo tasks
-
-```bash
-python train.py --env_name=HalfCheetah-v2 --save_dir=./tmp/
-```
-
-DeepMind Control suite (--env-name=domain-task)
-
-```bash
-python train.py --env_name=cheetah-run --save_dir=./tmp/
-```
-
-For continuous control from pixels
-
-```bash
-MUJOCO_GL=egl python train_pixels.py --env_name=cheetah-run --save_dir=./tmp/
-```
-
-For offline RL
-
-```bash
-python train_offline.py --env_name=halfcheetah-expert-v0  --dataset_name=d4rl --save_dir=./tmp/
-```
-
-For RL finetuning
-
-```bash
-python train_finetuning.py --env_name=HalfCheetah-v2 --dataset_name=awac --save_dir=./tmp/
-```
+# [Examples](examples/)
 
 # Troubleshooting
 
@@ -100,12 +71,14 @@ Build
 Copy your MuJoCo key to ./vendor
 
 ```bash
-docker build -t ikostrikov/jax-rl . -f remote/Dockerfile 
+cd remote
+docker build -t ikostrikov/jax-rl . -f Dockerfile 
 ```
 
 Test
 ```bash
-docker run -v <code-dir>:/jax_rl/ --gpus=all dockers/jax python /jax_rl/train.py --env_name=HalfCheetah-v2 --save_dir=/jax_rl/tmp/
+docker pull ikostrikov/jax-rl:latest
+docker run -v <examples-dir>:/jax_rl/ --gpus=all ikostrikov/jax-rl:latest python /jax_rl/train.py --env_name=HalfCheetah-v2 --save_dir=/jax_rl/tmp/
 ```
 
 
