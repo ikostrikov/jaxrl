@@ -21,7 +21,7 @@ The goal of this repository is to provide simple and clean implementations to bu
 
 ```bash
 conda install patchelf
-pip install --upgrade git+https://github.com/ikostrikov/jax-rl@main#egg
+pip install --upgrade git+https://github.com/ikostrikov/jax-rl@main
 # For GPU support run
 pip install --upgrade jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
@@ -29,6 +29,15 @@ pip install --upgrade jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/j
 If you want to run this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
 
 Please follow [the instructions](https://github.com/openai/mujoco-py/pull/583/files) to build mujoco-py with fast headless GPU rendering.
+
+# Development 
+
+If you want to modify the code, install following the instructions below.
+
+```bash
+conda install patchelf
+pip install --upgrade -e .
+```
 
 # [Examples](examples/)
 
