@@ -6,9 +6,9 @@ from absl import app, flags
 from ml_collections import config_flags
 from tensorboardX import SummaryWriter
 
-from jax_rl.agents import BCLearner
-from jax_rl.datasets import make_env_and_dataset
-from jax_rl.evaluation import evaluate
+from jaxrl.agents import BCLearner
+from jaxrl.datasets import make_env_and_dataset
+from jaxrl.evaluation import evaluate
 
 FLAGS = flags.FLAGS
 

@@ -87,4 +87,4 @@ RUN conda install -n jax-rl pip
 RUN pip install --upgrade git+https://github.com/ikostrikov/jax-rl@main#egg
 RUN pip install --upgrade jax jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 
-WORKDIR /jax_rl
+WORKDIR /jaxrl

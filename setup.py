@@ -19,12 +19,12 @@ install_requires = [
 description = ('Implementations of Reinforcement Learning algorithms in Jax.')
 
 setup(
-    name='jax_rl',
+    name='jaxrl',
     version='0.0.1',
     description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/ikostrikov/jax-rl',
+    url='https://github.com/ikostrikov/jaxrl',
     author='Ilya Kostrikov',
     classifiers=[
         'Development Status :: 3 - Alpha',

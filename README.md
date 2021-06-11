@@ -21,7 +21,7 @@ The goal of this repository is to provide simple and clean implementations to bu
 
 ```bash
 conda install patchelf
-pip install --upgrade git+https://github.com/ikostrikov/jax-rl@main
+pip install --upgrade git+https://github.com/ikostrikov/jaxrl
 # For GPU support run
 pip install --upgrade jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
@@ -81,13 +81,12 @@ Copy your MuJoCo key to ./vendor
 
 ```bash
 cd remote
-docker build -t ikostrikov/jax-rl . -f Dockerfile 
+docker build -t ikostrikov/jaxrl . -f Dockerfile 
 ```
 
 Test
 ```bash
-docker pull ikostrikov/jax-rl:latest
-docker run -v <examples-dir>:/jax_rl/ --gpus=all ikostrikov/jax-rl:latest python /jax_rl/train.py --env_name=HalfCheetah-v2 --save_dir=/jax_rl/tmp/
+docker run -v <examples-dir>:/jaxrl/ --gpus=all ikostrikov/jaxrl:latest python /jaxrl/train.py --env_name=HalfCheetah-v2 --save_dir=/jaxrl/tmp/
 ```
 
 

@@ -6,11 +6,11 @@ from absl import app, flags
 from ml_collections import config_flags
 from tensorboardX import SummaryWriter
 
-from jax_rl.agents import AWACLearner, SACLearner
-from jax_rl.datasets import ReplayBuffer
-from jax_rl.datasets.dataset_utils import make_env_and_dataset
-from jax_rl.evaluation import evaluate
-from jax_rl.utils import make_env
+from jaxrl.agents import AWACLearner, SACLearner
+from jaxrl.datasets import ReplayBuffer
+from jaxrl.datasets.dataset_utils import make_env_and_dataset
+from jaxrl.evaluation import evaluate
+from jaxrl.utils import make_env
 
 FLAGS = flags.FLAGS
 
