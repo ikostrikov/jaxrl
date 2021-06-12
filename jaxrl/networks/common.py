@@ -22,6 +22,7 @@ InfoDict = Dict[str, float]
 
 class MLP(nn.Module):
     hidden_dims: Sequence[int]
+    activations: Callable[[jnp.ndarray], jnp.ndarray] = nn.relu
     activate_final: int = False
 
     @nn.compact
@@ -29,7 +30,7 @@ class MLP(nn.Module):
         for i, size in enumerate(self.hidden_dims):
             x = nn.Dense(size, kernel_init=default_init())(x)
             if i + 1 < len(self.hidden_dims) or self.activate_final:
-                x = nn.relu(x)
+                x = self.activations(x)
         return x
 
 
