@@ -14,7 +14,8 @@ def make_env(env_name: str,
              action_repeat: int = 1,
              frame_stack: int = 1,
              from_pixels: bool = False,
-             image_size: int = 84) -> gym.Env:
+             image_size: int = 84,
+             sticky: bool = False) -> gym.Env:
     # Check if the env is in gym.
     all_envs = gym.envs.registry.all()
     env_ids = [env_spec.id for env_spec in all_envs]
@@ -53,6 +54,9 @@ def make_env(env_name: str,
 
     if frame_stack > 1:
         env = wrappers.FrameStack(env, num_stack=frame_stack)
+
+    if sticky:
+        env = wrappers.StickyActionEnv(env)
 
     env.seed(seed)
     env.action_space.seed(seed)
