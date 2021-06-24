@@ -10,7 +10,7 @@ from tensorflow_probability.substrates import jax as tfp
 tfd = tfp.distributions
 tfb = tfp.bijectors
 
-LOG_STD_MIN = -10.0
+LOG_STD_MIN = -5.0
 LOG_STD_MAX = 2.0
 
 
