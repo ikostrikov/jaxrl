@@ -12,7 +12,7 @@ from jaxrl.evaluation import evaluate
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('env_name', 'halfcheetah-expert-v0', 'Environment name.')
+flags.DEFINE_string('env_name', 'halfcheetah-expert-v2', 'Environment name.')
 flags.DEFINE_enum('dataset_name', 'd4rl', ['d4rl', 'awac'], 'Dataset name.')
 flags.DEFINE_string('save_dir', './tmp/', 'Tensorboard logging dir.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
@@ -22,6 +22,9 @@ flags.DEFINE_integer('log_interval', 1000, 'Logging interval.')
 flags.DEFINE_integer('eval_interval', 5000, 'Eval interval.')
 flags.DEFINE_integer('batch_size', 256, 'Mini batch size.')
 flags.DEFINE_integer('max_steps', int(1e6), 'Number of training steps.')
+flags.DEFINE_float(
+    'percentile', 100.0,
+    'Dataset percentile (see https://arxiv.org/abs/2106.01345).')
 flags.DEFINE_integer('start_training', int(1e4),
                      'Number of training steps to start training.')
 flags.DEFINE_boolean('tqdm', True, 'Use tqdm progress bar.')
@@ -42,6 +45,8 @@ def main(_):
 
     env, dataset = make_env_and_dataset(FLAGS.env_name, FLAGS.seed,
                                         FLAGS.dataset_name, video_save_folder)
+    if FLAGS.percentile < 100.0:
+        dataset.take_top(FLAGS.percentile)
 
     kwargs = dict(FLAGS.config)
     kwargs['num_steps'] = FLAGS.max_steps
