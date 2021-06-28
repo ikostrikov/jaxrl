@@ -4,8 +4,8 @@ import random
 import numpy as np
 import tqdm
 from absl import app, flags
+from flax.metrics.tensorboard import SummaryWriter
 from ml_collections import config_flags
-from tensorboardX import SummaryWriter
 
 from jaxrl.agents import DrQLearner
 from jaxrl.datasets import ReplayBuffer
@@ -110,8 +110,8 @@ def main(_):
         if done:
             observation, done = env.reset(), False
             for k, v in info['episode'].items():
-                summary_writer.add_scalar(f'training/{k}', v,
-                                          info['total']['timesteps'])
+                summary_writer.scalar(f'training/{k}', v,
+                                      info['total']['timesteps'])
 
         if i >= FLAGS.start_training:
             batch = replay_buffer.sample(FLAGS.batch_size)
@@ -119,15 +119,15 @@ def main(_):
 
             if i % FLAGS.log_interval == 0:
                 for k, v in update_info.items():
-                    summary_writer.add_scalar(f'training/{k}', v, i)
+                    summary_writer.scalar(f'training/{k}', v, i)
                 summary_writer.flush()
 
         if i % FLAGS.eval_interval == 0:
             eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
 
             for k, v in eval_stats.items():
-                summary_writer.add_scalar(f'evaluation/average_{k}s', v,
-                                          info['total']['timesteps'])
+                summary_writer.scalar(f'evaluation/average_{k}s', v,
+                                      info['total']['timesteps'])
             summary_writer.flush()
 
             eval_returns.append(

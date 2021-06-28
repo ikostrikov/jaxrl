@@ -3,8 +3,8 @@ import os
 import numpy as np
 import tqdm
 from absl import app, flags
+from flax.metrics.tensorboard import SummaryWriter
 from ml_collections import config_flags
-from tensorboardX import SummaryWriter
 
 from jaxrl.agents import BCLearner
 from jaxrl.datasets import make_env_and_dataset
@@ -64,14 +64,14 @@ def main(_):
 
         if i % FLAGS.log_interval == 0:
             for k, v in update_info.items():
-                summary_writer.add_scalar(f'training/{k}', v, i)
+                summary_writer.scalar(f'training/{k}', v, i)
             summary_writer.flush()
 
         if i % FLAGS.eval_interval == 0:
             eval_stats = evaluate(agent, env, FLAGS.eval_episodes)
 
             for k, v in eval_stats.items():
-                summary_writer.add_scalar(f'evaluation/average_{k}s', v, i)
+                summary_writer.scalar(f'evaluation/average_{k}s', v, i)
             summary_writer.flush()
 
             eval_returns.append((i, eval_stats['return']))
