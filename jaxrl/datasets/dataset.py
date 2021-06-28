@@ -8,6 +8,42 @@ Batch = collections.namedtuple(
     ['observations', 'actions', 'rewards', 'masks', 'next_observations'])
 
 
+def split_into_trajectories(observations, actions, rewards, masks,
+                            next_observations):
+    trajs = [[]]
+
+    for i in tqdm(range(len(observations))):
+        if i > 0:
+            # Detect breaks between trajectories.
+            norm = np.linalg.norm(next_observations[i - 1] - observations[i])
+            if norm > 0.0 or masks[i - 1] == 0.0:
+                trajs.append([])
+
+        trajs[-1].append((observations[i], actions[i], rewards[i], masks[i],
+                          next_observations[i]))
+
+    return trajs
+
+
+def merge_trajectories(trajs):
+    observations = []
+    actions = []
+    rewards = []
+    masks = []
+    next_observations = []
+
+    for traj in trajs:
+        for (obs, act, rew, mask, next_obs) in traj:
+            observations.append(obs)
+            actions.append(act)
+            rewards.append(rew)
+            masks.append(mask)
+            next_observations.append(next_obs)
+
+    return np.stack(observations), np.stack(actions), np.stack(
+        rewards), np.stack(masks), np.stack(next_observations)
+
+
 class Dataset(object):
     def __init__(self, observations: np.ndarray, actions: np.ndarray,
                  rewards: np.ndarray, masks: np.ndarray,
@@ -30,19 +66,9 @@ class Dataset(object):
     def take_top(self, percentile: float = 100.0):
         assert percentile > 0.0 and percentile <= 100.0
 
-        trajs = [[]]
-
-        for i in tqdm(range(len(self.observations))):
-            if i > 0:
-                # Detect breaks between trajectories.
-                norm = np.linalg.norm(self.next_observations[i - 1] -
-                                      self.observations[i])
-                if norm > 0.0 or self.masks[i - 1] == 0.0:
-                    trajs.append([])
-
-            trajs[-1].append(
-                (self.observations[i], self.actions[i], self.rewards[i],
-                 self.masks[i], self.next_observations[i]))
+        trajs = split_into_trajectories(self.observations, self.actions,
+                                        self.rewards, self.masks,
+                                        self.next_observations)
 
         def compute_returns(traj):
             episode_return = 0
@@ -58,23 +84,7 @@ class Dataset(object):
 
         trajs = trajs[-N:]
 
-        observations = []
-        actions = []
-        rewards = []
-        masks = []
-        next_observations = []
+        (self.observations, self.actions, self.rewards, self.masks,
+         self.next_observations) = merge_trajectories(trajs)
 
-        for traj in trajs:
-            for (obs, act, rew, mask, next_obs) in traj:
-                observations.append(obs)
-                actions.append(act)
-                rewards.append(rew)
-                masks.append(mask)
-                next_observations.append(next_obs)
-
-        self.observations = np.stack(observations)
-        self.actions = np.stack(actions)
-        self.rewards = np.stack(rewards)
-        self.masks = np.stack(masks)
-        self.next_observations = np.stack(next_observations)
         self.size = len(self.observations)
