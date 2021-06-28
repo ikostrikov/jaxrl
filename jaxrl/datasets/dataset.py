@@ -88,3 +88,22 @@ class Dataset(object):
          self.next_observations) = merge_trajectories(trajs)
 
         self.size = len(self.observations)
+
+    def take_random(self, percentage: float = 100.0):
+        assert percentage > 0.0 and percentage <= 100.0
+
+        trajs = split_into_trajectories(self.observations, self.actions,
+                                        self.rewards, self.masks,
+                                        self.next_observations)
+
+        np.random.shuffle(trajs)
+
+        N = int(len(trajs) * percentage / 100)
+        N = max(1, N)
+
+        trajs = trajs[-N:]
+
+        (self.observations, self.actions, self.rewards, self.masks,
+         self.next_observations) = merge_trajectories(trajs)
+
+        self.size = len(self.observations)

@@ -25,6 +25,8 @@ flags.DEFINE_integer('max_steps', int(1e6), 'Number of training steps.')
 flags.DEFINE_float(
     'percentile', 100.0,
     'Dataset percentile (see https://arxiv.org/abs/2106.01345).')
+flags.DEFINE_float('percentage', 100.0,
+                   'Pencentage of the dataset to use for training.')
 flags.DEFINE_integer('start_training', int(1e4),
                      'Number of training steps to start training.')
 flags.DEFINE_boolean('tqdm', True, 'Use tqdm progress bar.')
@@ -45,6 +47,10 @@ def main(_):
 
     env, dataset = make_env_and_dataset(FLAGS.env_name, FLAGS.seed,
                                         FLAGS.dataset_name, video_save_folder)
+
+    if FLAGS.percentage < 100.0:
+        dataset.take_random(FLAGS.percentage)
+
     if FLAGS.percentile < 100.0:
         dataset.take_top(FLAGS.percentile)
 
