@@ -7,7 +7,7 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 install_requires = [
-    'numpy >= 1.19.2',
+    'numpy >= 1.20.2',
     'scipy >= 1.6.0',
     'absl-py >= 0.12.0',
     'gym[mujoco] >= 0.18.0',
@@ -18,7 +18,7 @@ install_requires = [
     'jaxlib >= 0.1.67',
     'ml_collections >= 0.1.0',
     'optax >= 0.0.6',
-    'tensorflow >= 2.5.0',  # For tensorboard support.
+    'tensorboardX == 2.1',
     'tensorflow-probability >= 0.13.0',
     'imageio >= 2.9.0',
     'imageio-ffmpeg >= 0.4.3',
