@@ -2,7 +2,6 @@
 
 from typing import Sequence
 
-import flax
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -13,7 +12,8 @@ from jaxrl.datasets import Batch
 from jaxrl.networks import autoregressive_policy, policies
 from jaxrl.networks.common import InfoDict, Model
 
-_update_jit = jax.jit(actor.update)
+_log_prob_update_jit = jax.jit(actor.log_prob_update)
+_mse_update_jit = jax.jit(actor.mse_update)
 
 
 class BCLearner(object):
@@ -24,13 +24,17 @@ class BCLearner(object):
                  actor_lr: float = 1e-3,
                  num_steps: int = int(1e6),
                  hidden_dims: Sequence[int] = (256, 256),
-                 distribution: str = 'mog'):
+                 distribution: str = 'det'):
+
+        self.distribution = distribution
 
         rng = jax.random.PRNGKey(seed)
         rng, actor_key = jax.random.split(rng)
 
         action_dim = actions.shape[-1]
-        if distribution == 'mog':
+        if distribution == 'det':
+            actor_def = policies.MSEPolicy(hidden_dims, action_dim)
+        elif distribution == 'mog':
             actor_def = policies.NormalTanhMixturePolicy(
                 hidden_dims, action_dim)
         else:
@@ -52,11 +56,15 @@ class BCLearner(object):
         self.rng, actions = policies.sample_actions(self.rng,
                                                     self.actor.apply_fn,
                                                     self.actor.params,
-                                                    observations, temperature)
+                                                    observations, temperature,
+                                                    self.distribution)
 
         actions = np.asarray(actions)
         return np.clip(actions, -1, 1)
 
     def update(self, batch: Batch) -> InfoDict:
-        self.actor, info = _update_jit(self.actor, batch)
+        if self.distribution == 'det':
+            self.actor, info = _mse_update_jit(self.actor, batch)
+        else:
+            self.actor, info = _log_prob_update_jit(self.actor, batch)
         return info

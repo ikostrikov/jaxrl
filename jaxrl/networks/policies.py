@@ -15,6 +15,21 @@ LOG_STD_MIN = -10.0
 LOG_STD_MAX = 2.0
 
 
+class MSEPolicy(nn.Module):
+    hidden_dims: Sequence[int]
+    action_dim: int
+
+    @nn.compact
+    def __call__(self,
+                 observations: jnp.ndarray,
+                 temperature: float = 1.0) -> jnp.ndarray:
+        outputs = MLP(self.hidden_dims, activate_final=True)(observations)
+
+        actions = nn.Dense(self.action_dim,
+                           kernel_init=default_init())(outputs)
+        return nn.tanh(actions)
+
+
 class NormalTanhPolicy(nn.Module):
     hidden_dims: Sequence[int]
     action_dim: int
@@ -84,12 +99,19 @@ class NormalTanhMixturePolicy(nn.Module):
         return tfd.Independent(dist, 1)
 
 
-@jax.partial(jax.jit, static_argnums=1)
-def sample_actions(rng: PRNGKey,
-                   actor_def: nn.Module,
-                   actor_params: Params,
-                   observations: np.ndarray,
-                   temperature: float = 1.0) -> Tuple[PRNGKey, jnp.ndarray]:
-    dist = actor_def.apply({'params': actor_params}, observations, temperature)
-    rng, key = jax.random.split(rng)
-    return rng, dist.sample(seed=key)
+@jax.partial(jax.jit, static_argnums=(1, 5))
+def sample_actions(
+        rng: PRNGKey,
+        actor_def: nn.Module,
+        actor_params: Params,
+        observations: np.ndarray,
+        temperature: float = 1.0,
+        distribution: str = 'log_prob') -> Tuple[PRNGKey, jnp.ndarray]:
+    if distribution == 'det':
+        return rng, actor_def.apply({'params': actor_params}, observations,
+                                    temperature)
+    else:
+        dist = actor_def.apply({'params': actor_params}, observations,
+                               temperature)
+        rng, key = jax.random.split(rng)
+        return rng, dist.sample(seed=key)
