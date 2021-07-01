@@ -1,9 +1,10 @@
 from typing import Tuple
 
+import jax
 import jax.numpy as jnp
 
 from jaxrl.datasets import Batch
-from jaxrl.networks.common import InfoDict, Model, Params
+from jaxrl.networks.common import InfoDict, Model, Params, PRNGKey
 
 
 def log_prob_update(actor: Model, batch: Batch) -> Tuple[Model, InfoDict]:
@@ -16,10 +17,16 @@ def log_prob_update(actor: Model, batch: Batch) -> Tuple[Model, InfoDict]:
     return actor.apply_gradient(loss_fn)
 
 
-def mse_update(actor: Model, batch: Batch) -> Tuple[Model, InfoDict]:
+def mse_update(actor: Model, batch: Batch,
+               rng: PRNGKey) -> Tuple[Model, InfoDict]:
+    rng, key = jax.random.split(rng)
+
     def loss_fn(actor_params: Params) -> Tuple[jnp.ndarray, InfoDict]:
-        actions = actor.apply({'params': actor_params}, batch.observations)
+        actions = actor.apply({'params': actor_params},
+                              batch.observations,
+                              training=True,
+                              rngs={'dropout': key})
         actor_loss = ((actions - batch.actions)**2).mean()
         return actor_loss, {'actor_loss': actor_loss}
 
-    return actor.apply_gradient(loss_fn)
+    return (rng, *actor.apply_gradient(loss_fn))

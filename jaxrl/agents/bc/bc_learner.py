@@ -33,7 +33,9 @@ class BCLearner(object):
 
         action_dim = actions.shape[-1]
         if distribution == 'det':
-            actor_def = policies.MSEPolicy(hidden_dims, action_dim)
+            actor_def = policies.MSEPolicy(hidden_dims,
+                                           action_dim,
+                                           dropout_rate=0.1)
         elif distribution == 'mog':
             actor_def = policies.NormalTanhMixturePolicy(
                 hidden_dims, action_dim)
@@ -64,7 +66,8 @@ class BCLearner(object):
 
     def update(self, batch: Batch) -> InfoDict:
         if self.distribution == 'det':
-            self.actor, info = _mse_update_jit(self.actor, batch)
+            self.rng, self.actor, info = _mse_update_jit(
+                self.actor, batch, self.rng)
         else:
             self.actor, info = _log_prob_update_jit(self.actor, batch)
         return info

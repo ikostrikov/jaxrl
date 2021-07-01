@@ -1,4 +1,4 @@
-from typing import Sequence, Tuple
+from typing import Optional, Sequence, Tuple
 
 import flax.linen as nn
 import jax
@@ -18,12 +18,17 @@ LOG_STD_MAX = 2.0
 class MSEPolicy(nn.Module):
     hidden_dims: Sequence[int]
     action_dim: int
+    dropout_rate: Optional[float] = None
 
     @nn.compact
     def __call__(self,
                  observations: jnp.ndarray,
-                 temperature: float = 1.0) -> jnp.ndarray:
-        outputs = MLP(self.hidden_dims, activate_final=True)(observations)
+                 temperature: float = 1.0,
+                 training: bool = False) -> jnp.ndarray:
+        outputs = MLP(self.hidden_dims,
+                      activate_final=True,
+                      dropout_rate=self.dropout_rate)(observations,
+                                                      training=training)
 
         actions = nn.Dense(self.action_dim,
                            kernel_init=default_init())(outputs)
