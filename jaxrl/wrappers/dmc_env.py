@@ -4,6 +4,7 @@
 
 from typing import Dict, Optional
 
+import gym
 import numpy as np
 from dm_control import suite
 from dm_env import specs
@@ -22,24 +23,39 @@ def _spec_to_box(spec):
         elif type(s) == specs.BoundedArray:
             zeros = np.zeros(dim, dtype=np.float32)
             return s.minimum + zeros, s.maximum + zeros
+        elif type(s) == gym.spaces.Box:
+            zeros = np.zeros(dim, dtype=np.float32)
+            return s.low + zeros, s.high + zeros
 
     mins, maxs = [], []
     for s in spec:
         mn, mx = extract_min_max(s)
         mins.append(mn)
         maxs.append(mx)
+
     low = np.concatenate(mins, axis=0)
     high = np.concatenate(maxs, axis=0)
     assert low.shape == high.shape
     return spaces.Box(low, high, dtype=np.float32)
 
 
-def _flatten_obs(obs):
-    obs_pieces = []
-    for v in obs.values():
+def _flatten(arrs):
+    pieces = []
+    for v in arrs.values():
         flat = np.array([v]) if np.isscalar(v) else v.ravel()
-        obs_pieces.append(flat)
-    return np.concatenate(obs_pieces, axis=0)
+        pieces.append(flat)
+    return np.concatenate(pieces, axis=0)
+
+
+def _unflatten(specs, flat_array):
+    dict_ = {}
+    prev_dim = 0
+    for k, v in specs.spaces.items():
+        dim = np.int(np.prod(v.shape))
+        dict_[k] = flat_array[prev_dim:prev_dim + dim]
+        dict_[k] = dict_[k].reshape(v.shape)
+        prev_dim += dim
+    return dict_
 
 
 class DMCEnv(core.Env):
@@ -71,7 +87,7 @@ class DMCEnv(core.Env):
         time_step = self._env.step(action)
         reward = time_step.reward or 0
         done = time_step.last()
-        obs = _flatten_obs(time_step.observation)
+        obs = _flatten(time_step.observation)
 
         info = {}
         if done and time_step.discount == 1.0:
@@ -81,7 +97,7 @@ class DMCEnv(core.Env):
 
     def reset(self):
         time_step = self._env.reset()
-        return _flatten_obs(time_step.observation)
+        return _flatten(time_step.observation)
 
     def render(self,
                mode='rgb_array',
