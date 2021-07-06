@@ -39,12 +39,17 @@ class NormalTanhPolicy(nn.Module):
     hidden_dims: Sequence[int]
     action_dim: int
     state_dependent_std: bool = True
+    dropout_rate: Optional[float] = None
 
     @nn.compact
     def __call__(self,
                  observations: jnp.ndarray,
-                 temperature: float = 1.0) -> tfd.Distribution:
-        outputs = MLP(self.hidden_dims, activate_final=True)(observations)
+                 temperature: float = 1.0,
+                 training: bool = False) -> tfd.Distribution:
+        outputs = MLP(self.hidden_dims,
+                      activate_final=True,
+                      dropout_rate=self.dropout_rate)(observations,
+                                                      training=training)
 
         means = nn.Dense(self.action_dim, kernel_init=default_init())(outputs)
 
@@ -68,12 +73,17 @@ class NormalTanhMixturePolicy(nn.Module):
     hidden_dims: Sequence[int]
     action_dim: int
     num_components: int = 5
+    dropout_rate: Optional[float] = None
 
     @nn.compact
     def __call__(self,
                  observations: jnp.ndarray,
-                 temperature: float = 1.0) -> tfd.Distribution:
-        outputs = MLP(self.hidden_dims, activate_final=True)(observations)
+                 temperature: float = 1.0,
+                 training: bool = False) -> tfd.Distribution:
+        outputs = MLP(self.hidden_dims,
+                      activate_final=True,
+                      dropout_rate=self.dropout_rate)(observations,
+                                                      training=training)
 
         logits = nn.Dense(self.action_dim * self.num_components,
                           kernel_init=default_init())(outputs)

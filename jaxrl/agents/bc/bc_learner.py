@@ -37,11 +37,12 @@ class BCLearner(object):
                                            action_dim,
                                            dropout_rate=0.1)
         elif distribution == 'mog':
-            actor_def = policies.NormalTanhMixturePolicy(
-                hidden_dims, action_dim)
+            actor_def = policies.NormalTanhMixturePolicy(hidden_dims,
+                                                         action_dim,
+                                                         dropout_rate=0.1)
         else:
             actor_def = autoregressive_policy.MADETanhMixturePolicy(
-                hidden_dims, action_dim)
+                hidden_dims, action_dim, dropout_rate=0.1)
 
         schedule_fn = optax.cosine_decay_schedule(-actor_lr, num_steps)
         optimiser = optax.chain(optax.scale_by_adam(),
@@ -69,5 +70,6 @@ class BCLearner(object):
             self.rng, self.actor, info = _mse_update_jit(
                 self.actor, batch, self.rng)
         else:
-            self.actor, info = _log_prob_update_jit(self.actor, batch)
+            self.rng, self.actor, info = _log_prob_update_jit(
+                self.actor, batch, self.rng)
         return info

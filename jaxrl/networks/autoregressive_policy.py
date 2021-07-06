@@ -82,9 +82,13 @@ class MaskedDense(nn.Dense):
 class MaskedMLP(nn.Module):
     features: typing.Sequence[int]
     activate_final: bool = False
+    dropout_rate: typing.Optional[float] = 0.1
 
     @nn.compact
-    def __call__(self, inputs: jnp.ndarray, conds: jnp.ndarray) -> jnp.ndarray:
+    def __call__(self,
+                 inputs: jnp.ndarray,
+                 conds: jnp.ndarray,
+                 training: bool = False) -> jnp.ndarray:
         x = inputs
         x_conds = conds
         for i, feat in enumerate(self.features):
@@ -102,6 +106,15 @@ class MaskedMLP(nn.Module):
             if i + 1 < len(self.features) or self.activate_final:
                 x = nn.relu(x)
                 x_conds = nn.relu(x_conds)
+                if self.dropout_rate is not None:
+                    if training:
+                        rng = self.make_rng('dropout')
+                    else:
+                        rng = None
+                    x_conds = nn.Dropout(rate=self.dropout_rate)(
+                        x_conds, deterministic=not training, rng=rng)
+                    x = nn.Dropout(rate=self.dropout_rate)(
+                        x, deterministic=not training, rng=rng)
         return x
 
 
@@ -149,14 +162,17 @@ class MADETanhMixturePolicy(nn.Module):
     features: typing.Sequence[int]
     action_dim: int
     num_components: int = 10
+    dropout_rate: typing.Optional[float] = None
 
     @nn.compact
     def __call__(self,
                  states: jnp.ndarray,
-                 temperature: float = 1.0) -> tfd.Distribution:
+                 temperature: float = 1.0,
+                 training: bool = False) -> tfd.Distribution:
         is_initializing = not self.has_variable('params', 'means')
         masked_mlp = MaskedMLP(
-            (*self.features, 3 * self.num_components * self.action_dim))
+            (*self.features, 3 * self.num_components * self.action_dim),
+            dropout_rate=self.dropout_rate)
         means_init = self.param('means', nn.initializers.normal(1.0),
                                 (self.num_components * self.action_dim, ))
 
@@ -166,7 +182,7 @@ class MADETanhMixturePolicy(nn.Module):
             masked_mlp(actions, states)
 
         def distr_fn(actions: jnp.ndarray) -> tfd.Distribution:
-            outputs = masked_mlp(actions, states)
+            outputs = masked_mlp(actions, states, training=training)
             means, log_scales, logits = jnp.split(outputs, 3, axis=-1)
             means = means + means_init
 
