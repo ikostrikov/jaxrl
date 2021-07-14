@@ -49,7 +49,6 @@ def main(_):
         video_train_folder = None
         video_eval_folder = None
 
-    env = make_env(FLAGS.env_name, FLAGS.seed, video_train_folder)
     env, dataset = make_env_and_dataset(FLAGS.env_name, FLAGS.seed,
                                         FLAGS.dataset_name, video_train_folder)
 
