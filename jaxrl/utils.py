@@ -11,6 +11,7 @@ from jaxrl.wrappers import VideoRecorder
 def make_env(env_name: str,
              seed: int,
              save_folder: Optional[str] = None,
+             add_episode_monitor: bool = True,
              action_repeat: int = 1,
              frame_stack: int = 1,
              from_pixels: bool = False,
@@ -28,7 +29,8 @@ def make_env(env_name: str,
                               task_name=task_name,
                               task_kwargs={'random': seed})
 
-    env = wrappers.EpisodeMonitor(env)
+    if add_episode_monitor:
+        env = wrappers.EpisodeMonitor(env)
 
     if action_repeat > 1:
         env = wrappers.RepeatAction(env, action_repeat)
