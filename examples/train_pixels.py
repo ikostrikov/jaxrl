@@ -62,13 +62,19 @@ def main(_):
     else:
         action_repeat = PLANET_ACTION_REPEAT.get(FLAGS.env_name, 2)
 
+    kwargs = dict(FLAGS.config)
+    gray_scale = kwargs.pop('gray_scale')
+    image_size = kwargs.pop('image_size')
+
     def make_pixel_env(seed, video_folder):
         return make_env(FLAGS.env_name,
                         seed,
                         video_folder,
                         action_repeat=action_repeat,
+                        image_size=image_size,
                         frame_stack=3,
-                        from_pixels=True)
+                        from_pixels=True,
+                        gray_scale=gray_scale)
 
     env = make_pixel_env(FLAGS.seed, video_train_folder)
     eval_env = make_pixel_env(FLAGS.seed + 42, video_eval_folder)
@@ -76,7 +82,6 @@ def main(_):
     np.random.seed(FLAGS.seed)
     random.seed(FLAGS.seed)
 
-    kwargs = dict(FLAGS.config)
     kwargs.pop('algo')
     replay_buffer_size = kwargs.pop('replay_buffer_size')
     agent = DrQLearner(FLAGS.seed,

@@ -16,7 +16,8 @@ def make_env(env_name: str,
              frame_stack: int = 1,
              from_pixels: bool = False,
              image_size: int = 84,
-             sticky: bool = False) -> gym.Env:
+             sticky: bool = False,
+             gray_scale: bool = False) -> gym.Env:
     # Check if the env is in gym.
     all_envs = gym.envs.registry.all()
     env_ids = [env_spec.id for env_spec in all_envs]
@@ -51,6 +52,8 @@ def make_env(env_name: str,
                                           }
                                       })
         env = wrappers.TakeKey(env, take_key='pixels')
+        if gray_scale:
+            env = wrappers.RGB2Gray(env)
     else:
         env = wrappers.SinglePrecision(env)
 
