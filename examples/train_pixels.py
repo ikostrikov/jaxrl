@@ -94,7 +94,7 @@ def main(_):
 
     eval_returns = []
     observation, done = env.reset(), False
-    for i in tqdm.tqdm(range(1, (FLAGS.max_steps + 1) // action_repeat),
+    for i in tqdm.tqdm(range(1, FLAGS.max_steps // action_repeat + 1),
                        smoothing=0.1,
                        disable=not FLAGS.tqdm):
         if i < FLAGS.start_training:
