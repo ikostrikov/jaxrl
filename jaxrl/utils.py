@@ -30,6 +30,9 @@ def make_env(env_name: str,
                               task_name=task_name,
                               task_kwargs={'random': seed})
 
+    if isinstance(env.observation_space, gym.spaces.Dict):
+        env = gym.wrappers.FlattenObservation(env)
+
     if add_episode_monitor:
         env = wrappers.EpisodeMonitor(env)
 

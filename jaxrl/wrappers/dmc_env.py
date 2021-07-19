@@ -2,9 +2,9 @@
 # https://github.com/denisyarats/dmc2gym
 # and modified to exclude duplicated code.
 
-from typing import Dict, Optional
+import copy
+from typing import Dict, Optional, OrderedDict
 
-import gym
 import numpy as np
 from dm_control import suite
 from dm_env import specs
@@ -13,49 +13,24 @@ from gym import core, spaces
 from jaxrl.wrappers.common import TimeStep
 
 
-def _spec_to_box(spec):
-    def extract_min_max(s):
-        assert s.dtype == np.float64 or s.dtype == np.float32
-        dim = np.int(np.prod(s.shape))
-        if type(s) == specs.Array:
-            bound = np.inf * np.ones(dim, dtype=np.float32)
-            return -bound, bound
-        elif type(s) == specs.BoundedArray:
-            zeros = np.zeros(dim, dtype=np.float32)
-            return s.minimum + zeros, s.maximum + zeros
-        elif type(s) == gym.spaces.Box:
-            zeros = np.zeros(dim, dtype=np.float32)
-            return s.low + zeros, s.high + zeros
-
-    mins, maxs = [], []
-    for s in spec:
-        mn, mx = extract_min_max(s)
-        mins.append(mn)
-        maxs.append(mx)
-
-    low = np.concatenate(mins, axis=0)
-    high = np.concatenate(maxs, axis=0)
-    assert low.shape == high.shape
-    return spaces.Box(low, high, dtype=np.float32)
-
-
-def _flatten(arrs):
-    pieces = []
-    for v in arrs.values():
-        flat = np.array([v]) if np.isscalar(v) else v.ravel()
-        pieces.append(flat)
-    return np.concatenate(pieces, axis=0)
-
-
-def _unflatten(specs, flat_array):
-    dict_ = {}
-    prev_dim = 0
-    for k, v in specs.spaces.items():
-        dim = np.int(np.prod(v.shape))
-        dict_[k] = flat_array[prev_dim:prev_dim + dim]
-        dict_[k] = dict_[k].reshape(v.shape)
-        prev_dim += dim
-    return dict_
+def dmc_spec2gym_space(spec):
+    if isinstance(spec, OrderedDict):
+        spec = copy.copy(spec)
+        for k, v in spec.items():
+            spec[k] = dmc_spec2gym_space(v)
+        return spaces.Dict(spec)
+    elif isinstance(spec, specs.BoundedArray):
+        return spaces.Box(low=spec.minimum,
+                          high=spec.maximum,
+                          shape=spec.shape,
+                          dtype=spec.dtype)
+    elif isinstance(spec, specs.Array):
+        return spaces.Box(low=-float('inf'),
+                          high=float('inf'),
+                          shape=spec.shape,
+                          dtype=spec.dtype)
+    else:
+        raise NotImplementedError
 
 
 class DMCEnv(core.Env):
@@ -70,11 +45,10 @@ class DMCEnv(core.Env):
                                task_name=task_name,
                                task_kwargs=task_kwargs,
                                environment_kwargs=environment_kwargs)
+        self.action_space = dmc_spec2gym_space(self._env.action_spec())
 
-        self.action_space = _spec_to_box([self._env.action_spec()])
-
-        self.observation_space = _spec_to_box(
-            self._env.observation_spec().values())
+        self.observation_space = dmc_spec2gym_space(
+            self._env.observation_spec())
 
         self.seed(seed=task_kwargs['random'])
 
@@ -87,7 +61,7 @@ class DMCEnv(core.Env):
         time_step = self._env.step(action)
         reward = time_step.reward or 0
         done = time_step.last()
-        obs = _flatten(time_step.observation)
+        obs = time_step.observation
 
         info = {}
         if done and time_step.discount == 1.0:
@@ -97,7 +71,7 @@ class DMCEnv(core.Env):
 
     def reset(self):
         time_step = self._env.reset()
-        return _flatten(time_step.observation)
+        return time_step.observation
 
     def render(self,
                mode='rgb_array',
