@@ -20,6 +20,7 @@ flags.DEFINE_string('env_name', 'FetchPush-v1', 'Environment name.')
 flags.DEFINE_string('save_dir', './tmp/', 'Tensorboard logging dir.')
 flags.DEFINE_enum('goal_sampling', 'future', ['final', 'future'],
                   'Sampling strategy.')
+flags.DEFINE_integer('num_goals', 1, 'Number of goals to sample.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
 flags.DEFINE_integer('eval_episodes', 10,
                      'Number of episodes used for evaluation.')
@@ -39,6 +40,9 @@ config_flags.DEFINE_config_file(
 
 
 def main(_):
+    if FLAGS.num_goals > 1:
+        assert FLAGS.goal_sampling != 'final'
+
     summary_writer = SummaryWriter(
         os.path.join(FLAGS.save_dir, 'tb', str(FLAGS.seed)))
 
@@ -81,8 +85,9 @@ def main(_):
         raise NotImplementedError()
 
     action_dim = env.action_space.shape[0]
-    replay_buffer = ReplayBuffer(flat_observation_space, action_dim,
-                                 replay_buffer_size or FLAGS.max_steps)
+    replay_buffer = ReplayBuffer(
+        flat_observation_space, action_dim, replay_buffer_size
+        or FLAGS.max_steps * (FLAGS.num_goals + 1))
 
     eval_returns = []
     observation_dict, done, trajectory = env.reset(), False, []
@@ -112,22 +117,22 @@ def main(_):
         observation_dict = next_observation_dict
 
         if done:
-            rewards = []
-            for t_i, (obs, act, mas, next_obs, info) in enumerate(trajectory):
-                if FLAGS.goal_sampling == 'final':
-                    ind = -1
-                else:
-                    ind = random.randint(t_i, len(trajectory) - 1)
-                final_goal = trajectory[ind][-2][
-                    'achieved_goal']  # Next observation achieved goal.
-                rew = env.compute_reward(next_obs['achieved_goal'], final_goal,
-                                         info)
-                obs['desired_goal'] = final_goal
-                next_obs['desired_goal'] = final_goal
-                obs = spaces.flatten(env.observation_space, obs)
-                next_obs = spaces.flatten(env.observation_space, next_obs)
-                rewards.append(rew)
-                replay_buffer.insert(obs, act, rew, mas, next_obs)
+            for _ in range(FLAGS.num_goals):
+                for t_i, (obs, act, mas, next_obs,
+                          info) in enumerate(trajectory):
+                    if FLAGS.goal_sampling == 'final':
+                        ind = -1
+                    else:
+                        ind = random.randint(t_i, len(trajectory) - 1)
+                    final_goal = trajectory[ind][-2][
+                        'achieved_goal']  # Next observation achieved goal.
+                    rew = env.compute_reward(next_obs['achieved_goal'],
+                                             final_goal, info)
+                    obs['desired_goal'] = final_goal
+                    next_obs['desired_goal'] = final_goal
+                    obs = spaces.flatten(env.observation_space, obs)
+                    next_obs = spaces.flatten(env.observation_space, next_obs)
+                    replay_buffer.insert(obs, act, rew, mas, next_obs)
 
             observation_dict, done, trajectory = env.reset(), False, []
             observation = spaces.flatten(env.observation_space,
