@@ -17,7 +17,8 @@ def make_env(env_name: str,
              from_pixels: bool = False,
              image_size: int = 84,
              sticky: bool = False,
-             gray_scale: bool = False) -> gym.Env:
+             gray_scale: bool = False,
+             flatten: bool = True) -> gym.Env:
     # Check if the env is in gym.
     all_envs = gym.envs.registry.all()
     env_ids = [env_spec.id for env_spec in all_envs]
@@ -30,7 +31,7 @@ def make_env(env_name: str,
                               task_name=task_name,
                               task_kwargs={'random': seed})
 
-    if isinstance(env.observation_space, gym.spaces.Dict):
+    if flatten and isinstance(env.observation_space, gym.spaces.Dict):
         env = gym.wrappers.FlattenObservation(env)
 
     if add_episode_monitor:
