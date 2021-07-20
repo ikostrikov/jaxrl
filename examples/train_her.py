@@ -18,6 +18,8 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('env_name', 'FetchPush-v1', 'Environment name.')
 flags.DEFINE_string('save_dir', './tmp/', 'Tensorboard logging dir.')
+flags.DEFINE_enum('goal_sampling', 'future', ['final', 'future'],
+                  'Sampling strategy.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
 flags.DEFINE_integer('eval_episodes', 10,
                      'Number of episodes used for evaluation.')
@@ -110,10 +112,14 @@ def main(_):
         observation_dict = next_observation_dict
 
         if done:
-            final_goal = trajectory[-1][-2][
-                'achieved_goal']  # Next observation achieved goal.
             rewards = []
-            for (obs, act, mas, next_obs, info) in trajectory:
+            for t_i, (obs, act, mas, next_obs, info) in enumerate(trajectory):
+                if FLAGS.goal_sampling == 'final':
+                    ind = -1
+                else:
+                    ind = random.randint(t_i, len(trajectory) - 1)
+                final_goal = trajectory[ind][-2][
+                    'achieved_goal']  # Next observation achieved goal.
                 rew = env.compute_reward(next_obs['achieved_goal'], final_goal,
                                          info)
                 obs['desired_goal'] = final_goal
