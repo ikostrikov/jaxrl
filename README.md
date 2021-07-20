@@ -5,11 +5,15 @@ This repository contains Jax (Flax) implementations of Reinforcement Learning al
 * [Soft Actor Critic with learnable temperature](https://arxiv.org/abs/1812.05905)
 * [Advantage Weighted Actor Critic](https://arxiv.org/abs/2006.09359)
 * [Image Augmentation Is All You Need](https://arxiv.org/abs/2004.13649)(only [K=1, M=1])
+* [Hindsight Experience Replay](https://arxiv.org/abs/1707.01495)
 * Behavioral Cloning
 
 The goal of this repository is to provide simple and clean implementations to build research on top of. **Please do not use this repository for baseline results and use the original implementations instead ([SAC](https://github.com/rail-berkeley/softlearning/), [AWAC](https://github.com/vitchyr/rlkit/tree/master/examples/awac), [DrQ](https://github.com/denisyarats/drq)).**
 
 # Changelog
+
+## July 19th, 2021
+- Added an implementation of [Hindsight Experience Replay](https://arxiv.org/abs/1707.01495)
 
 ## May 19th, 2021
 - Added an implementation of [Soft Actor Critic v1](https://arxiv.org/abs/1801.01290)
