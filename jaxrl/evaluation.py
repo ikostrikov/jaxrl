@@ -10,8 +10,7 @@ def evaluate(agent: nn.Module,
              num_episodes: int,
              with_success: bool = False) -> Dict[str, float]:
     stats = {'return': [], 'length': []}
-    if with_success:
-        successes = 0.0
+    successes = None
     for _ in range(num_episodes):
         observation, done = env.reset(), False
         while not done:
@@ -20,12 +19,14 @@ def evaluate(agent: nn.Module,
         for k in stats.keys():
             stats[k].append(info['episode'][k])
 
-        if with_success:
+        if 'is_success' in info:
+            if successes is None:
+                successes = 0.0
             successes += info['is_success']
 
     for k, v in stats.items():
         stats[k] = np.mean(v)
 
-    if with_success:
+    if successes is not None:
         stats['success'] = successes / num_episodes
     return stats

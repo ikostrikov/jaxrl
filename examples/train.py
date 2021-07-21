@@ -103,6 +103,11 @@ def main(_):
                 summary_writer.add_scalar(f'training/{k}', v,
                                           info['total']['timesteps'])
 
+            if 'is_success' in info:
+                summary_writer.add_scalar(f'training/success',
+                                          info['is_success'],
+                                          info['total']['timesteps'])
+
         if i >= FLAGS.start_training:
             batch = replay_buffer.sample(FLAGS.batch_size)
             update_info = agent.update(batch)
