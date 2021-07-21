@@ -9,7 +9,7 @@ from gym import spaces
 from ml_collections import config_flags
 from tensorboardX import SummaryWriter
 
-from jaxrl.agents import AWACLearner, SACLearner, SACV1Learner
+from jaxrl.agents import AWACLearner, DDPGLearner, SACLearner, SACV1Learner
 from jaxrl.datasets import ReplayBuffer
 from jaxrl.evaluation import evaluate
 from jaxrl.utils import make_env
@@ -34,7 +34,7 @@ flags.DEFINE_boolean('tqdm', True, 'Use tqdm progress bar.')
 flags.DEFINE_boolean('save_video', False, 'Save videos during evaluation.')
 config_flags.DEFINE_config_file(
     'config',
-    'configs/sac_default.py',
+    'configs/ddpg_default.py',
     'File path to the training hyperparameter configuration.',
     lock_config=False)
 
@@ -79,6 +79,10 @@ def main(_):
                              env.action_space.sample()[np.newaxis], **kwargs)
     elif algo == 'awac':
         agent = AWACLearner(FLAGS.seed,
+                            flat_observation_space.sample()[np.newaxis],
+                            env.action_space.sample()[np.newaxis], **kwargs)
+    if algo == 'ddpg':
+        agent = DDPGLearner(FLAGS.seed,
                             flat_observation_space.sample()[np.newaxis],
                             env.action_space.sample()[np.newaxis], **kwargs)
     else:

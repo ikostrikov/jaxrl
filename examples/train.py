@@ -7,7 +7,7 @@ from absl import app, flags
 from ml_collections import config_flags
 from tensorboardX import SummaryWriter
 
-from jaxrl.agents import AWACLearner, SACLearner, SACV1Learner
+from jaxrl.agents import AWACLearner, DDPGLearner, SACLearner, SACV1Learner
 from jaxrl.datasets import ReplayBuffer
 from jaxrl.evaluation import evaluate
 from jaxrl.utils import make_env
@@ -64,6 +64,10 @@ def main(_):
                              env.action_space.sample()[np.newaxis], **kwargs)
     elif algo == 'awac':
         agent = AWACLearner(FLAGS.seed,
+                            env.observation_space.sample()[np.newaxis],
+                            env.action_space.sample()[np.newaxis], **kwargs)
+    elif algo == 'ddpg':
+        agent = DDPGLearner(FLAGS.seed,
                             env.observation_space.sample()[np.newaxis],
                             env.action_space.sample()[np.newaxis], **kwargs)
     else:
