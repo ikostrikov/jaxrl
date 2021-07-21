@@ -1,7 +1,9 @@
 # Adapted from
 # https://github.com/rail-berkeley/doodad/blob/master/doodad/wrappers/easy_launch/example/docker_example/Dockerfile
 
-FROM nvidia/cuda:11.2.2-cudnn8-devel-ubuntu18.04
+# Uncomment from cuda
+# FROM nvidia/cuda:11.2.2-cudnn8-devel-ubuntu18.04
+FROM ubuntu:18.04
 
 
 SHELL ["/bin/bash", "-c"]
@@ -30,6 +32,7 @@ RUN apt-get update -q \
     xpra \
     xserver-xorg-dev \
     zlib1g-dev \
+    build-essential \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -40,51 +43,53 @@ RUN chmod +x /usr/local/bin/Xdummy
 # Workaround for https://bugs.launchpad.net/ubuntu/+source/nvidia-graphics-drivers-375/+bug/1674677
 COPY ./vendor/10_nvidia.json /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
-RUN useradd -m user
-
-USER user
-ENV HOME=/home/user
-WORKDIR /home/user
-
 # Not sure why this is needed
 ENV LD_LIBRARY_PATH /usr/local/nvidia/lib64:${LD_LIBRARY_PATH}
+
 
 ##########################################################
 ### MuJoCo
 ##########################################################
-RUN mkdir -p $HOME/.mujoco \
+# Note: ~ is an alias for /root
+RUN mkdir -p /root/.mujoco \
     && wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip \
-    && unzip mujoco.zip -d $HOME/.mujoco \
+    && unzip mujoco.zip -d /root/.mujoco \
     && rm mujoco.zip
-RUN mkdir -p $HOME/.mujoco \
+RUN mkdir -p /root/.mujoco \
     && wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip \
-    && unzip mujoco.zip -d $HOME/.mujoco \
+    && unzip mujoco.zip -d /root/.mujoco \
     && rm mujoco.zip
-COPY ./vendor/mjkey.txt $HOME/.mujoco/mjkey.txt
-RUN ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
-ENV LD_LIBRARY_PATH $HOME/.mujoco/mjpro150/bin:${LD_LIBRARY_PATH}
-ENV LD_LIBRARY_PATH $HOME/.mujoco/mujoco200/bin:${LD_LIBRARY_PATH}
-ENV LD_LIBRARY_PATH $HOME/.mujoco/mujoco200_linux/bin:${LD_LIBRARY_PATH}
+COPY ./vendor/mjkey.txt /root/.mujoco/mjkey.txt
+RUN ln -s /root/.mujoco/mujoco200_linux /root/.mujoco/mujoco200
+ENV LD_LIBRARY_PATH /root/.mujoco/mjpro150/bin:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH /root/.mujoco/mujoco200/bin:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH /root/.mujoco/mujoco200_linux/bin:${LD_LIBRARY_PATH}
 
 
 ##########################################################
-### Example Python Installation
+### Python
 ##########################################################
-ENV PATH $HOME/miniconda/bin:$PATH
+ENV PATH /opt/conda/bin:$PATH
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
-    /bin/bash /tmp/miniconda.sh -b -p $HOME/miniconda && \
-    rm /tmp/miniconda.sh
+    /bin/bash /tmp/miniconda.sh -b -p /opt/conda && \
+    rm /tmp/miniconda.sh && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> /etc/bash.bashrc
 
 RUN conda update -y --name base conda && conda clean --all -y
 
-RUN conda create -n jax-rl python=3.7
+RUN conda create --name railrl python=3.7 pip
+RUN echo "source activate railrl" >> ~/.bashrc
+# Use the railrl pip
 ENV OLDPATH $PATH
-ENV PATH $HOME/miniconda/envs/jax-rl/bin:$PATH
+ENV PATH /opt/conda/envs/railrl/bin:$PATH
 
-RUN conda install -n jax-rl patchelf
-RUN conda install -n jax-rl pip
+RUN conda update -y --name base conda && conda clean --all -y
 
-RUN pip install --upgrade git+https://github.com/ikostrikov/jax-rl@main#egg
-RUN pip install --upgrade jax jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
+RUN conda install patchelf
+RUN conda install  pip
 
-WORKDIR /jaxrl
+RUN pip install --upgrade git+https://github.com/ikostrikov/jaxrl@main#egg
+
+# Uncomment from cuda
+# RUN pip install --upgrade jax jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
