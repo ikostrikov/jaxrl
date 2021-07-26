@@ -78,7 +78,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 
 RUN conda update -y --name base conda && conda clean --all -y
 
-RUN conda create --name railrl python=3.7 pip
+RUN conda create --name railrl python=3.7 pip patchelf
 RUN echo "source activate railrl" >> ~/.bashrc
 # Use the railrl pip
 ENV OLDPATH $PATH
@@ -86,10 +86,12 @@ ENV PATH /opt/conda/envs/railrl/bin:$PATH
 
 RUN conda update -y --name base conda && conda clean --all -y
 
-RUN conda install patchelf
-RUN conda install  pip
-
 RUN pip install --upgrade git+https://github.com/ikostrikov/jaxrl@main#egg
 
-# Uncomment from cuda
+RUN pip install mujoco_py==1.50.1.56
+
+# Uncomment to install a cuda version of jax
 # RUN pip install --upgrade jax jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
+
+# For torch 
+# RUN conda install -n railrl pytorch torchvision torchaudio cpuonly -c pytorch
