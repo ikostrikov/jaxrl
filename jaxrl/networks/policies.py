@@ -43,6 +43,7 @@ class NormalTanhPolicy(nn.Module):
     log_std_scale: float = 1.0
     log_std_min: Optional[float] = None
     log_std_max: Optional[float] = None
+    tanh_squash_distribution: bool = True
 
     @nn.compact
     def __call__(self,
@@ -68,11 +69,17 @@ class NormalTanhPolicy(nn.Module):
         log_std_max = self.log_std_max or LOG_STD_MAX
         log_stds = jnp.clip(log_stds, log_std_min, log_std_max)
 
+        if not self.tanh_squash_distribution:
+            means = nn.tanh(means)
+
         base_dist = tfd.MultivariateNormalDiag(loc=means,
                                                scale_diag=jnp.exp(log_stds) *
                                                temperature)
-        return tfd.TransformedDistribution(distribution=base_dist,
-                                           bijector=tfb.Tanh())
+        if self.tanh_squash_distribution:
+            return tfd.TransformedDistribution(distribution=base_dist,
+                                               bijector=tfb.Tanh())
+        else:
+            return base_dist
 
 
 class NormalTanhMixturePolicy(nn.Module):

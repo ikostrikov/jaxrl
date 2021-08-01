@@ -78,7 +78,8 @@ class AWACLearner(object):
         actor_def = policies.NormalTanhPolicy(
             actor_hidden_dims,
             action_dim,
-            state_dependent_std=state_dependent_std)
+            state_dependent_std=state_dependent_std,
+            tanh_squash_distribution=False)
         actor = Model.create(actor_def,
                              inputs=[actor_key, observations],
                              tx=optax.adamw(**actor_optim_kwargs))
