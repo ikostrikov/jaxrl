@@ -44,6 +44,8 @@ def _update_jit(
                                             soft_critic=True)
     if update_target:
         new_target_critic = target_update(new_critic, target_critic, tau)
+    else:
+        new_target_critic = target_critic
 
     # Use critic conv layers in actor:
     new_actor_params = actor.params.copy(

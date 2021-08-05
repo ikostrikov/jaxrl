@@ -35,6 +35,8 @@ def _update_jit(
                                             soft_critic=True)
     if update_target:
         new_target_critic = target_update(new_critic, target_critic, tau)
+    else:
+        new_target_critic = target_critic
 
     rng, key = jax.random.split(rng)
     new_actor, actor_info = update_actor(key, actor, new_critic, temp, batch)

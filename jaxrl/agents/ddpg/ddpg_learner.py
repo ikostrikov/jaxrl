@@ -25,6 +25,8 @@ def _update_jit(
                                             batch, discount)
     if update_target:
         new_target_critic = target_update(new_critic, target_critic, tau)
+    else:
+        new_target_critic = target_critic
 
     new_actor, actor_info = update_actor(actor, new_critic, batch)
 

@@ -35,6 +35,8 @@ def _update_jit(
 
     if update_target:
         new_target_value = target_update(new_value, target_value, tau)
+    else:
+        new_target_value = target_value
 
     new_temp, alpha_info = temperature.update(temp, actor_info['entropy'],
                                               target_entropy)
