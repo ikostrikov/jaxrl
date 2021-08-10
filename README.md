@@ -83,7 +83,7 @@ tensorboard --logdir=./tmp/
 
 # Docker
 
-Build
+## Build
 
 Copy your MuJoCo key to ./vendor
 
@@ -92,7 +92,7 @@ cd remote
 docker build -t ikostrikov/jaxrl . -f Dockerfile 
 ```
 
-Test
+## Test
 ```bash
 docker run -v <examples-dir>:/jaxrl/ --gpus=all ikostrikov/jaxrl:latest python /jaxrl/train.py --env_name=HalfCheetah-v2 --save_dir=/jaxrl/tmp/
 ```
