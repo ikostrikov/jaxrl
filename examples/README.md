@@ -29,9 +29,3 @@ For RL finetuning
 ```bash
 python train_finetuning.py --env_name=HalfCheetah-v2 --dataset_name=awac --save_dir=./tmp/
 ```
-
-For Hindsight Experience Replay
-
-```bash
-python train_her.py  --save_dir=./tmp/
-```

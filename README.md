@@ -5,7 +5,6 @@ This repository contains Jax (Flax) implementations of Reinforcement Learning al
 * [Soft Actor Critic with learnable temperature](https://arxiv.org/abs/1812.05905)
 * [Advantage Weighted Actor Critic](https://arxiv.org/abs/2006.09359)
 * [Image Augmentation Is All You Need](https://arxiv.org/abs/2004.13649)(only [K=1, M=1])
-* [Hindsight Experience Replay](https://arxiv.org/abs/1707.01495)
 * [Deep Deterministic Policy Gradient](https://arxiv.org/abs/1509.02971) with [Clipped Double Q-Learning](https://arxiv.org/abs/1802.09477)
 * Behavioral Cloning
 
@@ -15,9 +14,6 @@ The goal of this repository is to provide simple and clean implementations to bu
 
 ## July 20th, 2021
 - Added an implementation of [Deep Deterministic Policy Gradient](https://arxiv.org/abs/1509.02971) with [Clipped Double Q-Learning](https://arxiv.org/abs/1802.09477)
-
-## July 19th, 2021
-- Added an implementation of [Hindsight Experience Replay](https://arxiv.org/abs/1707.01495)
 
 ## May 19th, 2021
 - Added an implementation of [Soft Actor Critic v1](https://arxiv.org/abs/1801.01290)
