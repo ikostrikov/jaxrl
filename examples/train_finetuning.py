@@ -93,7 +93,7 @@ def main(_):
                 mask = 0.0
 
             replay_buffer.insert(observation, action, reward, mask,
-                                 next_observation)
+                                 float(done), next_observation)
             observation = next_observation
 
             if done:

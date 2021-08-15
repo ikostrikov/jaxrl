@@ -15,12 +15,14 @@ class ReplayBuffer(Dataset):
         actions = np.empty((capacity, action_dim), dtype=np.float32)
         rewards = np.empty((capacity, ), dtype=np.float32)
         masks = np.empty((capacity, ), dtype=np.float32)
+        dones_float = np.empty((capacity, ), dtype=np.float32)
         next_observations = np.empty((capacity, *observation_space.shape),
                                      dtype=observation_space.dtype)
         super().__init__(observations=observations,
                          actions=actions,
                          rewards=rewards,
                          masks=masks,
+                         dones_float=dones_float,
                          next_observations=next_observations,
                          size=0)
 
@@ -51,6 +53,7 @@ class ReplayBuffer(Dataset):
         self.actions[:num_samples] = dataset.actions[indices]
         self.rewards[:num_samples] = dataset.rewards[indices]
         self.masks[:num_samples] = dataset.masks[indices]
+        self.dones_float[:num_samples] = dataset.dones_float[indices]
         self.next_observations[:num_samples] = dataset.next_observations[
             indices]
 
@@ -58,11 +61,13 @@ class ReplayBuffer(Dataset):
         self.size = num_samples
 
     def insert(self, observation: np.ndarray, action: np.ndarray,
-               reward: float, discount: float, next_observation: np.ndarray):
+               reward: float, mask: float, done_float: float,
+               next_observation: np.ndarray):
         self.observations[self.insert_index] = observation
         self.actions[self.insert_index] = action
         self.rewards[self.insert_index] = reward
-        self.masks[self.insert_index] = discount
+        self.masks[self.insert_index] = mask
+        self.dones_float[self.insert_index] = done_float
         self.next_observations[self.insert_index] = next_observation
 
         self.insert_index = (self.insert_index + 1) % self.capacity

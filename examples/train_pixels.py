@@ -108,7 +108,7 @@ def main(_):
         else:
             mask = 0.0
 
-        replay_buffer.insert(observation, action, reward, mask,
+        replay_buffer.insert(observation, action, reward, mask, float(done),
                              next_observation)
         observation = next_observation
 

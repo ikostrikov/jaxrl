@@ -43,6 +43,7 @@ class AWACDataset(Dataset):
         actions = []
         rewards = []
         terminals = []
+        dones_float = []
         next_observations = []
 
         env = gym.make(env_name)
@@ -61,21 +62,27 @@ class AWACDataset(Dataset):
                 actions.append(trajectory['actions'])
                 rewards.append(trajectory['rewards'])
                 terminals.append(trajectory['terminals'])
+                done_float = np.zeros_like(trajectory['rewards'])
+                done_float[-1] = 1.0
+                dones_float.append(done_float)
                 next_observations.append(trajectory['next_observations'])
 
         observations = np.concatenate(observations, 0)
         actions = np.concatenate(actions, 0)
         rewards = np.concatenate(rewards, 0)
         terminals = np.concatenate(terminals, 0)
+        dones_float = np.concatenate(dones_float, 0)
         next_observations = np.concatenate(next_observations, 0)
 
         if clip_to_eps:
             lim = 1 - eps
             actions = np.clip(actions, -lim, lim)
 
-        super().__init__(observations=observations,
-                         actions=actions,
-                         rewards=rewards,
+        super().__init__(observations=observations.astype(np.float32),
+                         actions=actions.astype(np.float32),
+                         rewards=rewards.astype(np.float32),
                          masks=1.0 - terminals.astype(np.float32),
-                         next_observations=next_observations,
+                         dones_float=dones_float.astype(np.float32),
+                         next_observations=next_observations.astype(
+                             np.float32),
                          size=len(observations))
