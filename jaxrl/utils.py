@@ -46,7 +46,10 @@ def make_env(env_name: str,
         env = VideoRecorder(env, save_folder=save_folder)
 
     if from_pixels:
-        camera_id = 2 if domain_name == 'quadruped' else 0
+        if env_name in env_ids:
+            camera_id = 0
+        else:
+            camera_id = 2 if domain_name == 'quadruped' else 0
         env = PixelObservationWrapper(env,
                                       render_kwargs={
                                           'pixels': {
