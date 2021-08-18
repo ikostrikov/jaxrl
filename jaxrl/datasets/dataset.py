@@ -1,4 +1,5 @@
 import collections
+from typing import Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -64,6 +65,43 @@ class Dataset(object):
                      rewards=self.rewards[indx],
                      masks=self.masks[indx],
                      next_observations=self.next_observations[indx])
+
+    def get_initial_states(
+        self,
+        and_action: bool = False
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        states = []
+        if and_action:
+            actions = []
+        trajs = split_into_trajectories(self.observations, self.actions,
+                                        self.rewards, self.masks,
+                                        self.dones_float,
+                                        self.next_observations)
+        for traj in trajs:
+            states.append(traj[0][0])
+            if and_action:
+                actions.append(traj[0][1])
+
+        states = np.stack(states, 0)
+        if and_action:
+            actions = np.stack(actions, 0)
+            return states, actions
+        else:
+            return states
+
+    def get_monte_carlo_returns(self, discount) -> np.ndarray:
+        trajs = split_into_trajectories(self.observations, self.actions,
+                                        self.rewards, self.masks,
+                                        self.dones_float,
+                                        self.next_observations)
+        mc_returns = []
+        for traj in trajs:
+            mc_return = 0.0
+            for i, (_, _, reward, _, _, _) in enumerate(traj):
+                mc_return += reward * (discount**i)
+            mc_returns.append(mc_return)
+
+        return np.asarray(mc_returns)
 
     def take_top(self, percentile: float = 100.0):
         assert percentile > 0.0 and percentile <= 100.0
