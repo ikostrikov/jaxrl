@@ -14,11 +14,10 @@ def split_into_trajectories(observations, actions, rewards, masks, dones_float,
     trajs = [[]]
 
     for i in tqdm(range(len(observations))):
-        if dones_float[i] == 1.0 and i + 1 < len(observations):
-            trajs.append([])
-
         trajs[-1].append((observations[i], actions[i], rewards[i], masks[i],
                           dones_float[i], next_observations[i]))
+        if dones_float[i] == 1.0 and i + 1 < len(observations):
+            trajs.append([])
 
     return trajs
 
@@ -77,6 +76,16 @@ class Dataset(object):
                                         self.rewards, self.masks,
                                         self.dones_float,
                                         self.next_observations)
+
+        def compute_returns(traj):
+            episode_return = 0
+            for _, _, rew, _, _, _ in traj:
+                episode_return += rew
+
+            return episode_return
+
+        trajs.sort(key=compute_returns)
+
         for traj in trajs:
             states.append(traj[0][0])
             if and_action:

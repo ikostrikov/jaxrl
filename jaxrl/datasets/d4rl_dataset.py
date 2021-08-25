@@ -20,7 +20,8 @@ class D4RLDataset(Dataset):
 
         for i in range(len(dones_float) - 1):
             if np.linalg.norm(dataset['observations'][i + 1] -
-                              dataset['next_observations'][i]) > 1e-5:
+                              dataset['next_observations'][i]
+                              ) > 1e-6 or dataset['terminals'][i] == 1.0:
                 dones_float[i] = 1
             else:
                 dones_float[i] = 0
