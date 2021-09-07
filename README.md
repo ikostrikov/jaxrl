@@ -27,7 +27,7 @@ The goal of this repository is to provide simple and clean implementations to bu
 conda install patchelf
 pip install --upgrade git+https://github.com/ikostrikov/jaxrl
 # For GPU support run
-pip install --upgrade jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
+pip install --upgrade "jax[cuda111]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
 
 If you want to run this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
