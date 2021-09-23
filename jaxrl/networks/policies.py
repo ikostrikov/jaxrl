@@ -128,7 +128,7 @@ class NormalTanhMixturePolicy(nn.Module):
 
 
 @jax.partial(jax.jit, static_argnums=(1, 5))
-def sample_actions(
+def _sample_actions(
         rng: PRNGKey,
         actor_def: nn.Module,
         actor_params: Params,
@@ -143,3 +143,13 @@ def sample_actions(
                                temperature)
         rng, key = jax.random.split(rng)
         return rng, dist.sample(seed=key)
+
+
+def sample_actions(
+        rng: PRNGKey,
+        actor_def: nn.Module,
+        actor_params: Params,
+        observations: np.ndarray,
+        temperature: float = 1.0,
+        distribution: str = 'log_prob') -> Tuple[PRNGKey, jnp.ndarray]:
+    return _sample_actions(rng,actor_def,actor_params,observations,temperature,distribution)
