@@ -1,5 +1,6 @@
 """Implementations of algorithms for continuous control."""
 
+import functools
 from typing import Optional, Sequence, Tuple
 
 import jax
@@ -18,7 +19,7 @@ from jaxrl.networks import policies
 from jaxrl.networks.common import InfoDict, Model, PRNGKey
 
 
-@jax.partial(jax.jit, static_argnums=(6, 7, 8, 9))
+@functools.partial(jax.jit, static_argnames=('update_target'))
 def _update_jit(
     rng: PRNGKey, actor: Model, critic: Model, target_critic: Model,
     temp: Model, batch: Batch, discount: float, tau: float,

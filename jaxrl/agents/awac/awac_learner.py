@@ -1,8 +1,8 @@
 """Implementations of algorithms for continuous control."""
 
+import functools
 from typing import Sequence, Tuple
 
-import flax
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -15,7 +15,7 @@ from jaxrl.networks import critic_net, policies
 from jaxrl.networks.common import InfoDict, Model, PRNGKey
 
 
-@jax.partial(jax.jit, static_argnums=(5, 6, 7, 8, 9))
+@functools.partial(jax.jit, static_argnames=('update_target', 'num_samples'))
 def _update_jit(
         rng: PRNGKey, actor: Model, critic: Model, target_critic: Model,
         batch: Batch, discount: float, tau: float, num_samples: int,

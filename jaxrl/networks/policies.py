@@ -1,3 +1,4 @@
+import functools
 from typing import Optional, Sequence, Tuple
 
 import flax.linen as nn
@@ -127,7 +128,7 @@ class NormalTanhMixturePolicy(nn.Module):
         return tfd.Independent(dist, 1)
 
 
-@jax.partial(jax.jit, static_argnums=(1, 5))
+@functools.partial(jax.jit, static_argnames=('actor_def', 'distribution'))
 def _sample_actions(
         rng: PRNGKey,
         actor_def: nn.Module,
