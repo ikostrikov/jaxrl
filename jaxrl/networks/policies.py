@@ -153,4 +153,5 @@ def sample_actions(
         observations: np.ndarray,
         temperature: float = 1.0,
         distribution: str = 'log_prob') -> Tuple[PRNGKey, jnp.ndarray]:
-    return _sample_actions(rng,actor_def,actor_params,observations,temperature,distribution)
+    return _sample_actions(rng, actor_def, actor_params, observations,
+                           temperature, distribution)
