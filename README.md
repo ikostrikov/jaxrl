@@ -1,6 +1,8 @@
-# Jax (Flax) RL
+[![DOI](https://zenodo.org/badge/330059679.svg)](https://zenodo.org/badge/latestdoi/330059679)
 
-This repository contains Jax (Flax) implementations of Reinforcement Learning algorithms:
+# JAX (Flax) RL
+
+This repository contains JAX (Flax) implementations of Reinforcement Learning algorithms:
 
 * [Soft Actor Critic with learnable temperature](https://arxiv.org/abs/1812.05905)
 * [Advantage Weighted Actor Critic](https://arxiv.org/abs/2006.09359)
@@ -9,6 +11,18 @@ This repository contains Jax (Flax) implementations of Reinforcement Learning al
 * Behavioral Cloning
 
 The goal of this repository is to provide simple and clean implementations to build research on top of. **Please do not use this repository for baseline results and use the original implementations instead ([SAC](https://github.com/rail-berkeley/softlearning/), [AWAC](https://github.com/vitchyr/rlkit/tree/master/examples/awac), [DrQ](https://github.com/denisyarats/drq)).**
+
+If you use JAXRL in your work, please cite this repository in publications:
+```
+@misc{jaxrl,
+  author = {Kostrikov, Ilya},
+  doi = {10.5281/zenodo.5535154},
+  month = {10},
+  title = {{JAXRL: Implementations of Reinforcement Learning algorithms in JAX.}},
+  url = {https://github.com/ikostrikov/jaxrl},
+  year = {2021}
+}
+```
 
 # Changelog
 
@@ -47,7 +61,7 @@ pip install --upgrade -e .
 
 # Troubleshooting
 
-If you experience out-of-memory errors, especially with enabled video saving, please consider reading [docs](https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html#gpu-memory-allocation) on Jax GPU memory allocation. Also, you can try running with the following environment variable:
+If you experience out-of-memory errors, especially with enabled video saving, please consider reading [docs](https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html#gpu-memory-allocation) on JAX GPU memory allocation. Also, you can try running with the following environment variable:
 
 ```bash
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.80 python ...
