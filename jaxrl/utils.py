@@ -15,6 +15,7 @@ def make_env(env_name: str,
              action_repeat: int = 1,
              frame_stack: int = 1,
              from_pixels: bool = False,
+             pixels_only: bool = True,
              image_size: int = 84,
              sticky: bool = False,
              gray_scale: bool = False,
@@ -51,6 +52,7 @@ def make_env(env_name: str,
         else:
             camera_id = 2 if domain_name == 'quadruped' else 0
         env = PixelObservationWrapper(env,
+                                      pixels_only=pixels_only,
                                       render_kwargs={
                                           'pixels': {
                                               'height': image_size,
