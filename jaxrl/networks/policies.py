@@ -1,5 +1,5 @@
 import functools
-from typing import Optional, Sequence, Tuple
+from typing import Any, Callable, Optional, Sequence, Tuple
 
 import flax.linen as nn
 import jax
@@ -128,30 +128,30 @@ class NormalTanhMixturePolicy(nn.Module):
         return tfd.Independent(dist, 1)
 
 
-@functools.partial(jax.jit, static_argnames=('actor_def', 'distribution'))
+@functools.partial(jax.jit, static_argnames=('actor_apply_fn', 'distribution'))
 def _sample_actions(
         rng: PRNGKey,
-        actor_def: nn.Module,
+        actor_apply_fn: Callable[..., Any],
         actor_params: Params,
         observations: np.ndarray,
         temperature: float = 1.0,
         distribution: str = 'log_prob') -> Tuple[PRNGKey, jnp.ndarray]:
     if distribution == 'det':
-        return rng, actor_def.apply({'params': actor_params}, observations,
-                                    temperature)
+        return rng, actor_apply_fn({'params': actor_params}, observations,
+                                   temperature)
     else:
-        dist = actor_def.apply({'params': actor_params}, observations,
-                               temperature)
+        dist = actor_apply_fn({'params': actor_params}, observations,
+                              temperature)
         rng, key = jax.random.split(rng)
         return rng, dist.sample(seed=key)
 
 
 def sample_actions(
         rng: PRNGKey,
-        actor_def: nn.Module,
+        actor_apply_fn: Callable[..., Any],
         actor_params: Params,
         observations: np.ndarray,
         temperature: float = 1.0,
         distribution: str = 'log_prob') -> Tuple[PRNGKey, jnp.ndarray]:
-    return _sample_actions(rng, actor_def, actor_params, observations,
+    return _sample_actions(rng, actor_apply_fn, actor_params, observations,
                            temperature, distribution)

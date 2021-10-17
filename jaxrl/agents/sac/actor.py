@@ -10,7 +10,7 @@ from jaxrl.networks.common import InfoDict, Model, Params, PRNGKey
 def update(key: PRNGKey, actor: Model, critic: Model, temp: Model,
            batch: Batch) -> Tuple[Model, InfoDict]:
     def actor_loss_fn(actor_params: Params) -> Tuple[jnp.ndarray, InfoDict]:
-        dist = actor.apply({'params': actor_params}, batch.observations)
+        dist = actor.apply_fn({'params': actor_params}, batch.observations)
         actions = dist.sample(seed=key)
         log_probs = dist.log_prob(actions)
         q1, q2 = critic(batch.observations, actions)

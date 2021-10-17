@@ -30,8 +30,8 @@ def update(key: PRNGKey, actor: Model, critic: Model, target_critic: Model,
         target_q -= discount * batch.masks * temp() * next_log_probs
 
     def critic_loss_fn(critic_params: Params) -> Tuple[jnp.ndarray, InfoDict]:
-        q1, q2 = critic.apply({'params': critic_params}, batch.observations,
-                              batch.actions)
+        q1, q2 = critic.apply_fn({'params': critic_params}, batch.observations,
+                                 batch.actions)
         critic_loss = ((q1 - target_q)**2 + (q2 - target_q)**2).mean()
         return critic_loss, {
             'critic_loss': critic_loss,
