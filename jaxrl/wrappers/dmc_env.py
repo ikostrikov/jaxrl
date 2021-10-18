@@ -5,9 +5,9 @@
 import copy
 from typing import Dict, Optional, OrderedDict
 
+import dm_env
 import numpy as np
 from dm_control import suite
-from dm_env import specs
 from gym import core, spaces
 
 from jaxrl.wrappers.common import TimeStep
@@ -19,12 +19,12 @@ def dmc_spec2gym_space(spec):
         for k, v in spec.items():
             spec[k] = dmc_spec2gym_space(v)
         return spaces.Dict(spec)
-    elif isinstance(spec, specs.BoundedArray):
+    elif isinstance(spec, dm_env.specs.BoundedArray):
         return spaces.Box(low=spec.minimum,
                           high=spec.maximum,
                           shape=spec.shape,
                           dtype=spec.dtype)
-    elif isinstance(spec, specs.Array):
+    elif isinstance(spec, dm_env.specs.Array):
         return spaces.Box(low=-float('inf'),
                           high=float('inf'),
                           shape=spec.shape,
@@ -35,16 +35,24 @@ def dmc_spec2gym_space(spec):
 
 class DMCEnv(core.Env):
     def __init__(self,
-                 domain_name: str,
-                 task_name: str,
+                 domain_name: Optional[str] = None,
+                 task_name: Optional[str] = None,
+                 env: Optional[dm_env.Environment] = None,
                  task_kwargs: Optional[Dict] = {},
                  environment_kwargs=None):
-        assert 'random' in task_kwargs, 'please specify a seed, for deterministic behaviour'
+        assert 'random' in task_kwargs, 'Please specify a seed, for deterministic behaviour.'
+        assert (
+            env is not None
+            or (domain_name is not None and task_name is not None)
+        ), 'You must provide either an environment or domain and task names.'
 
-        self._env = suite.load(domain_name=domain_name,
-                               task_name=task_name,
-                               task_kwargs=task_kwargs,
-                               environment_kwargs=environment_kwargs)
+        if env is None:
+            env = suite.load(domain_name=domain_name,
+                             task_name=task_name,
+                             task_kwargs=task_kwargs,
+                             environment_kwargs=environment_kwargs)
+
+        self._env = env
         self.action_space = dmc_spec2gym_space(self._env.action_spec())
 
         self.observation_space = dmc_spec2gym_space(
