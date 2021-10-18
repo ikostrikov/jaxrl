@@ -5,11 +5,27 @@ import numpy as np
 from gym.spaces import Box
 
 
+# From https://github.com/openai/baselines/blob/master/baselines/common/atari_wrappers.py#L229
+# and modified for memory efficiency.
+class LazyFrames(object):
+    def __init__(self, frames, stack_axis=-1):
+        self._frames = frames
+        self._out = None
+        self._stack_axis = stack_axis
+
+    def __array__(self, dtype=None):
+        out = np.concatenate(self._frames, axis=self._stack_axis)
+        if dtype is not None:
+            out = out.astype(dtype)
+        return out
+
+
 class FrameStack(gym.Wrapper):
-    def __init__(self, env, num_stack: int, stack_axis=-1):
+    def __init__(self, env, num_stack: int, stack_axis=-1, lazy=False):
         super().__init__(env)
         self._num_stack = num_stack
         self._stack_axis = stack_axis
+        self._lazy = lazy
 
         self._frames = collections.deque([], maxlen=num_stack)
 
@@ -34,4 +50,7 @@ class FrameStack(gym.Wrapper):
 
     def _get_obs(self):
         assert len(self._frames) == self._num_stack
-        return np.concatenate(list(self._frames), axis=self._stack_axis)
+        if self._lazy:
+            return LazyFrames(list(self._frames), stack_axis=self._stack_axis)
+        else:
+            return np.concatenate(list(self._frames), axis=self._stack_axis)
