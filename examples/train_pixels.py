@@ -88,8 +88,7 @@ def main(_):
                        env.observation_space.sample()[np.newaxis],
                        env.action_space.sample()[np.newaxis], **kwargs)
 
-    action_dim = env.action_space.shape[0]
-    replay_buffer = ReplayBuffer(env.observation_space, action_dim,
+    replay_buffer = ReplayBuffer(env.observation_space, env.action_space,
                                  replay_buffer_size or FLAGS.max_steps)
 
     eval_returns = []

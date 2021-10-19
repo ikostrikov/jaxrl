@@ -70,8 +70,7 @@ def main(_):
     else:
         raise NotImplementedError()
 
-    action_dim = env.action_space.shape[0]
-    replay_buffer = ReplayBuffer(env.observation_space, action_dim,
+    replay_buffer = ReplayBuffer(env.observation_space, env.action_space,
                                  replay_buffer_size or FLAGS.max_steps)
     replay_buffer.initialize_with_dataset(dataset, FLAGS.init_dataset_size)
 

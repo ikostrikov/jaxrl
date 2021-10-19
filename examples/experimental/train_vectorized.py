@@ -70,9 +70,9 @@ def main(_):
                        eval_env.observation_space.sample()[np.newaxis],
                        eval_env.action_space.sample()[np.newaxis], **kwargs)
 
-    action_dim = eval_env.action_space.shape[-1]
-    replay_buffer = ReplayBuffer(eval_env.observation_space, action_dim,
-                                 replay_buffer_size or FLAGS.max_steps)
+    replay_buffer = ReplayBuffer(eval_env.observation_space,
+                                 eval_env.action_space, replay_buffer_size
+                                 or FLAGS.max_steps)
 
     eval_returns = []
     observation = env.reset()

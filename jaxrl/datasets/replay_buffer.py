@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import gym
 import numpy as np
@@ -7,12 +7,14 @@ from jaxrl.datasets.dataset import Dataset
 
 
 class ReplayBuffer(Dataset):
-    def __init__(self, observation_space: gym.spaces.Box, action_dim: int,
-                 capacity: int):
+    def __init__(self, observation_space: gym.spaces.Box,
+                 action_space: Union[gym.spaces.Discrete,
+                                     gym.spaces.Box], capacity: int):
 
         observations = np.empty((capacity, *observation_space.shape),
                                 dtype=observation_space.dtype)
-        actions = np.empty((capacity, action_dim), dtype=np.float32)
+        actions = np.empty((capacity, *action_space.shape),
+                           dtype=action_space.dtype)
         rewards = np.empty((capacity, ), dtype=np.float32)
         masks = np.empty((capacity, ), dtype=np.float32)
         dones_float = np.empty((capacity, ), dtype=np.float32)
