@@ -10,7 +10,6 @@ from gym.spaces import Box
 class LazyFrames(object):
     def __init__(self, frames, stack_axis=-1):
         self._frames = frames
-        self._out = None
         self._stack_axis = stack_axis
 
     def __array__(self, dtype=None):
