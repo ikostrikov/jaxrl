@@ -13,7 +13,8 @@ from jaxrl.evaluation import evaluate
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('env_name', 'halfcheetah-expert-v2', 'Environment name.')
-flags.DEFINE_enum('dataset_name', 'd4rl', ['d4rl', 'awac'], 'Dataset name.')
+flags.DEFINE_enum('dataset_name', 'd4rl', ['d4rl', 'awac', 'rl_unplugged'],
+                  'Dataset name.')
 flags.DEFINE_string('save_dir', './tmp/', 'Tensorboard logging dir.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
 flags.DEFINE_integer('eval_episodes', 10,
@@ -27,8 +28,6 @@ flags.DEFINE_float(
     'Dataset percentile (see https://arxiv.org/abs/2106.01345).')
 flags.DEFINE_float('percentage', 100.0,
                    'Pencentage of the dataset to use for training.')
-flags.DEFINE_integer('start_training', int(1e4),
-                     'Number of training steps to start training.')
 flags.DEFINE_boolean('tqdm', True, 'Use tqdm progress bar.')
 flags.DEFINE_boolean('save_video', False, 'Save videos during evaluation.')
 config_flags.DEFINE_config_file(

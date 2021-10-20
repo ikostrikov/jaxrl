@@ -10,8 +10,7 @@ install_requires = [
     'numpy >= 1.20.2', 'scipy >= 1.6.0', 'absl-py >= 0.12.0',
     'gym[mujoco] >= 0.18.0', 'gdown >= 3.12.2', 'tqdm >= 4.60.0',
     'flax >= 0.3.5', 'jax >= 0.2.21', 'ml_collections >= 0.1.0',
-    'optax >= 0.0.6', 'tensorboardX == 2.1',
-    'tfp-nightly', 'imageio >= 2.9.0',
+    'optax >= 0.0.6', 'tensorboardX == 2.1', 'tfp-nightly', 'imageio >= 2.9.0',
     'imageio-ffmpeg >= 0.4.3',
     'd4rl @ git+https://github.com/rail-berkeley/d4rl@master#egg=d4rl'
 ]
