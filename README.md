@@ -41,7 +41,7 @@ If you use JAXRL in your work, please cite this repository in publications:
 conda install patchelf
 pip install --upgrade git+https://github.com/ikostrikov/jaxrl
 # For GPU support run
-pip install --upgrade "jax[cuda111]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
+pip install --upgrade "jax[cuda]<=0.2.21" -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
 
 If you want to run this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
