@@ -157,3 +157,39 @@ class Dataset(object):
          self.dones_float, self.next_observations) = merge_trajectories(trajs)
 
         self.size = len(self.observations)
+
+    def train_validation_split(self,
+                               train_fraction: float = 0.8
+                               ) -> Tuple['Dataset', 'Dataset']:
+        trajs = split_into_trajectories(self.observations, self.actions,
+                                        self.rewards, self.masks,
+                                        self.dones_float,
+                                        self.next_observations)
+        train_size = int(train_fraction * len(trajs))
+
+        np.random.shuffle(trajs)
+
+        (train_observations, train_actions, train_rewards, train_masks,
+         train_dones_float,
+         train_next_observations) = merge_trajectories(trajs[:train_size])
+
+        (valid_observations, valid_actions, valid_rewards, valid_masks,
+         valid_dones_float,
+         valid_next_observations) = merge_trajectories(trajs[train_size:])
+
+        train_dataset = Dataset(train_observations,
+                                train_actions,
+                                train_rewards,
+                                train_masks,
+                                train_dones_float,
+                                train_next_observations,
+                                size=len(train_observations))
+        valid_dataset = Dataset(valid_observations,
+                                valid_actions,
+                                valid_rewards,
+                                valid_masks,
+                                valid_dones_float,
+                                valid_next_observations,
+                                size=len(valid_observations))
+
+        return train_dataset, valid_dataset
