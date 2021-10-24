@@ -39,6 +39,7 @@ If you use JAXRL in your work, please cite this repository in publications:
 
 ```bash
 conda install patchelf
+pip install dm_control
 pip install --upgrade git+https://github.com/ikostrikov/jaxrl
 # For GPU support run
 pip install --upgrade "jax[cuda]<=0.2.21" -f https://storage.googleapis.com/jax-releases/jax_releases.html
