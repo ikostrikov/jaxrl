@@ -1,5 +1,5 @@
 import os
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 import flax
 import flax.linen as nn
@@ -72,17 +72,27 @@ class Model:
     def __call__(self, *args, **kwargs):
         return self.apply_fn({'params': self.params}, *args, **kwargs)
 
-    def apply_gradient(self, loss_fn) -> Tuple[Any, 'Model']:
-        grad_fn = jax.grad(loss_fn, has_aux=True)
-        grads, info = grad_fn(self.params)
+    def apply_gradient(
+            self,
+            loss_fn: Callable[[Params], Any],
+            has_aux: bool = True) -> Union[Tuple['Model', Any], 'Model']:
+        grad_fn = jax.grad(loss_fn, has_aux=has_aux)
+        if has_aux:
+            grads, aux = grad_fn(self.params)
+        else:
+            grads = grad_fn(self.params)
 
         updates, new_opt_state = self.tx.update(grads, self.opt_state,
                                                 self.params)
         new_params = optax.apply_updates(self.params, updates)
 
-        return self.replace(step=self.step + 1,
-                            params=new_params,
-                            opt_state=new_opt_state), info
+        new_model = self.replace(step=self.step + 1,
+                                 params=new_params,
+                                 opt_state=new_opt_state)
+        if has_aux:
+            return new_model, aux
+        else:
+            return new_model
 
     def save(self, save_path: str):
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
