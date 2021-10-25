@@ -5,8 +5,7 @@ import gym
 import numpy as np
 
 
-def evaluate(agent: nn.Module, env: gym.Env,
-             num_episodes: int) -> Dict[str, float]:
+def evaluate(agent, env: gym.Env, num_episodes: int) -> Dict[str, float]:
     stats = {'return': [], 'length': []}
     successes = None
     for _ in range(num_episodes):
