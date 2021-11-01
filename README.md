@@ -42,7 +42,7 @@ conda install patchelf
 pip install dm_control
 pip install --upgrade git+https://github.com/ikostrikov/jaxrl
 # For GPU support run
-pip install --upgrade "jax[cuda]<=0.2.21" -f https://storage.googleapis.com/jax-releases/jax_releases.html
+pip install --upgrade "jax[cuda111]<=0.2.21" -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
 
 If you want to run this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
@@ -105,10 +105,11 @@ docker build -t ikostrikov/jaxrl . -f Dockerfile
 
 ## Test
 ```bash
-docker run -v <examples-dir>:/jaxrl/ --gpus=all ikostrikov/jaxrl:latest python /jaxrl/train.py --env_name=HalfCheetah-v2 --save_dir=/jaxrl/tmp/
+ sudo docker run -v <examples-dir>:/jaxrl/ ikostrikov/jaxrl:latest python /jaxrl/train.py --env_name=HalfCheetah-v2 --save_dir=/jaxrl/tmp/
+
+# On GPU
+ sudo docker run --rm --gpus all -v <examples-dir>:/jaxrl/ --gpus=all ikostrikov/jaxrl:latest python /jaxrl/train.py --env_name=HalfCheetah-v2 --save_dir=/jaxrl/tmp/
 ```
-
-
 
 # Contributing
 

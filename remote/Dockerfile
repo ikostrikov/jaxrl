@@ -51,14 +51,18 @@ ENV LD_LIBRARY_PATH /usr/local/nvidia/lib64:${LD_LIBRARY_PATH}
 ### MuJoCo
 ##########################################################
 # Note: ~ is an alias for /root
-RUN mkdir -p /root/.mujoco \
-    && wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip \
+RUN mkdir -p /root/.mujoco
+
+RUN wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip \
     && unzip mujoco.zip -d /root/.mujoco \
     && rm mujoco.zip
-RUN mkdir -p /root/.mujoco \
-    && wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip \
+RUN wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip \
     && unzip mujoco.zip -d /root/.mujoco \
     && rm mujoco.zip
+RUN wget https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz -O mujoco.tar.gz \
+    && tar -xf mujoco.tar.gz -C /root/.mujoco \
+    && rm mujoco.tar.gz
+
 COPY ./vendor/mjkey.txt /root/.mujoco/mjkey.txt
 RUN ln -s /root/.mujoco/mujoco200_linux /root/.mujoco/mujoco200
 ENV LD_LIBRARY_PATH /root/.mujoco/mjpro150/bin:${LD_LIBRARY_PATH}
@@ -86,12 +90,16 @@ ENV PATH /opt/conda/envs/railrl/bin:$PATH
 
 RUN conda update -y --name base conda && conda clean --all -y
 
+RUN pip install --upgrade pip
+
 RUN pip install --upgrade git+https://github.com/ikostrikov/jaxrl@main#egg
 
 RUN pip install mujoco_py==1.50.1.56
 
+RUN python -c "import mujoco_py"
+
 # Uncomment to install a cuda version of jax
-# RUN pip install --upgrade jax jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
+# RUN pip install --upgrade "jax[cuda111]<=0.2.21" -f https://storage.googleapis.com/jax-releases/jax_releases.html
 
 # For torch 
 # RUN conda install -n railrl pytorch torchvision torchaudio cpuonly -c pytorch
