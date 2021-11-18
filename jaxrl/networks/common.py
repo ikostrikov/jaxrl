@@ -74,13 +74,20 @@ class Model:
 
     def apply_gradient(
             self,
-            loss_fn: Callable[[Params], Any],
+            loss_fn: Optional[Callable[[Params], Any]] = None,
+            grads: Optional[Any] = None,
             has_aux: bool = True) -> Union[Tuple['Model', Any], 'Model']:
-        grad_fn = jax.grad(loss_fn, has_aux=has_aux)
-        if has_aux:
-            grads, aux = grad_fn(self.params)
+        assert (loss_fn is not None or grads is not None,
+                'Either a loss function or grads must be specified.')
+        if grads is None:
+            grad_fn = jax.grad(loss_fn, has_aux=has_aux)
+            if has_aux:
+                grads, aux = grad_fn(self.params)
+            else:
+                grads = grad_fn(self.params)
         else:
-            grads = grad_fn(self.params)
+            assert (has_aux,
+                    'When grads are provided, expects no aux outputs.')
 
         updates, new_opt_state = self.tx.update(grads, self.opt_state,
                                                 self.params)
