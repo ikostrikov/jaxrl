@@ -14,7 +14,7 @@ from jaxrl.wrappers.common import TimeStep
 
 
 def dmc_spec2gym_space(spec):
-    if isinstance(spec, OrderedDict):
+    if isinstance(spec, OrderedDict) or isinstance(spec, dict):
         spec = copy.copy(spec)
         for k, v in spec.items():
             spec[k] = dmc_spec2gym_space(v)
