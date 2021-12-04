@@ -19,6 +19,7 @@ def get_config():
 
     config.init_temperature = 1.0
     config.target_entropy = None
+    config.backup_entropy = True
 
     config.replay_buffer_size = None
 

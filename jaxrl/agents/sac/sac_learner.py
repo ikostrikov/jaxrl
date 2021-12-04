@@ -17,11 +17,12 @@ from jaxrl.networks import critic_net, policies
 from jaxrl.networks.common import InfoDict, Model, PRNGKey
 
 
-@functools.partial(jax.jit, static_argnames=('update_target'))
+@functools.partial(jax.jit,
+                   static_argnames=('backup_entropy', 'update_target'))
 def _update_jit(
     rng: PRNGKey, actor: Model, critic: Model, target_critic: Model,
     temp: Model, batch: Batch, discount: float, tau: float,
-    target_entropy: float, update_target: bool
+    target_entropy: float, backup_entropy: bool, update_target: bool
 ) -> Tuple[PRNGKey, Model, Model, Model, Model, InfoDict]:
 
     rng, key = jax.random.split(rng)
@@ -32,7 +33,7 @@ def _update_jit(
                                             temp,
                                             batch,
                                             discount,
-                                            soft_critic=True)
+                                            backup_entropy=backup_entropy)
     if update_target:
         new_target_critic = target_update(new_critic, target_critic, tau)
     else:
@@ -63,6 +64,7 @@ class SACLearner(object):
                  tau: float = 0.005,
                  target_update_period: int = 1,
                  target_entropy: Optional[float] = None,
+                 backup_entropy: bool = True,
                  init_temperature: float = 1.0):
         """
         An implementation of the version of Soft-Actor-Critic described in https://arxiv.org/abs/1812.05905
@@ -74,6 +76,8 @@ class SACLearner(object):
             self.target_entropy = -action_dim / 2
         else:
             self.target_entropy = target_entropy
+
+        self.backup_entropy = backup_entropy
 
         self.tau = tau
         self.target_update_period = target_update_period
@@ -122,7 +126,7 @@ class SACLearner(object):
         new_rng, new_actor, new_critic, new_target_critic, new_temp, info = _update_jit(
             self.rng, self.actor, self.critic, self.target_critic, self.temp,
             batch, self.discount, self.tau, self.target_entropy,
-            self.step % self.target_update_period == 0)
+            self.backup_entropy, self.step % self.target_update_period == 0)
 
         self.rng = new_rng
         self.actor = new_actor
