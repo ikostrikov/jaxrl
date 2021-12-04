@@ -65,7 +65,9 @@ class SACLearner(object):
                  target_update_period: int = 1,
                  target_entropy: Optional[float] = None,
                  backup_entropy: bool = True,
-                 init_temperature: float = 1.0):
+                 init_temperature: float = 1.0,
+                 init_mean: Optional[np.ndarray] = None,
+                 policy_final_fc_init_scale: float = 1.0):
         """
         An implementation of the version of Soft-Actor-Critic described in https://arxiv.org/abs/1812.05905
         """
@@ -85,7 +87,11 @@ class SACLearner(object):
 
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, temp_key = jax.random.split(rng, 4)
-        actor_def = policies.NormalTanhPolicy(hidden_dims, action_dim)
+        actor_def = policies.NormalTanhPolicy(
+            hidden_dims,
+            action_dim,
+            init_mean=init_mean,
+            final_fc_init_scale=policy_final_fc_init_scale)
         actor = Model.create(actor_def,
                              inputs=[actor_key, observations],
                              tx=optax.adam(learning_rate=actor_lr))

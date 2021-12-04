@@ -5,6 +5,7 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import numpy as np
+from flax.linen.module import init
 from tensorflow_probability.substrates import jax as tfp
 
 tfd = tfp.distributions
@@ -41,10 +42,11 @@ class NormalTanhPolicy(nn.Module):
     action_dim: int
     state_dependent_std: bool = True
     dropout_rate: Optional[float] = None
-    log_std_scale: float = 1.0
+    final_fc_init_scale: float = 1.0
     log_std_min: Optional[float] = None
     log_std_max: Optional[float] = None
     tanh_squash_distribution: bool = True
+    init_mean: Optional[jnp.ndarray] = None
 
     @nn.compact
     def __call__(self,
@@ -56,12 +58,16 @@ class NormalTanhPolicy(nn.Module):
                       dropout_rate=self.dropout_rate)(observations,
                                                       training=training)
 
-        means = nn.Dense(self.action_dim, kernel_init=default_init())(outputs)
+        means = nn.Dense(self.action_dim,
+                         kernel_init=default_init(
+                             self.final_fc_init_scale))(outputs)
+        if self.init_mean is not None:
+            means += self.init_mean
 
         if self.state_dependent_std:
             log_stds = nn.Dense(self.action_dim,
                                 kernel_init=default_init(
-                                    self.log_std_scale))(outputs)
+                                    self.final_fc_init_scale))(outputs)
         else:
             log_stds = self.param('log_stds', nn.initializers.zeros,
                                   (self.action_dim, ))
