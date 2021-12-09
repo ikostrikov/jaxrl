@@ -42,7 +42,7 @@ conda install patchelf
 pip install dm_control
 pip install --upgrade git+https://github.com/ikostrikov/jaxrl
 # For GPU support run
-pip install --upgrade "jax[cuda111]<=0.2.21" -f https://storage.googleapis.com/jax-releases/jax_releases.html
+pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
 
 If you want to run this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
