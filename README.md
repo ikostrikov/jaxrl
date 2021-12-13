@@ -18,7 +18,7 @@ If you use JAXRL in your work, please cite this repository in publications:
   author = {Kostrikov, Ilya},
   doi = {10.5281/zenodo.5535154},
   month = {10},
-  title = {{JAXRL: Implementations of Reinforcement Learning algorithms in JAX.}},
+  title = {{JAXRL: Implementations of Reinforcement Learning algorithms in JAX}},
   url = {https://github.com/ikostrikov/jaxrl},
   year = {2021}
 }
