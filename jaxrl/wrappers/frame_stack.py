@@ -8,6 +8,7 @@ from gym.spaces import Box
 # From https://github.com/openai/baselines/blob/master/baselines/common/atari_wrappers.py#L229
 # and modified for memory efficiency.
 class LazyFrames(object):
+
     def __init__(self, frames, stack_axis=-1):
         self._frames = frames
         self._stack_axis = stack_axis
@@ -20,6 +21,7 @@ class LazyFrames(object):
 
 
 class FrameStack(gym.Wrapper):
+
     def __init__(self, env, num_stack: int, stack_axis=-1, lazy=False):
         super().__init__(env)
         self._num_stack = num_stack

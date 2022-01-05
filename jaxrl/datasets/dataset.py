@@ -45,6 +45,7 @@ def merge_trajectories(trajs):
 
 
 class Dataset(object):
+
     def __init__(self, observations: np.ndarray, actions: np.ndarray,
                  rewards: np.ndarray, masks: np.ndarray,
                  dones_float: np.ndarray, next_observations: np.ndarray,

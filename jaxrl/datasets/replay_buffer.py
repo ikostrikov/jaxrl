@@ -7,6 +7,7 @@ from jaxrl.datasets.dataset import Dataset
 
 
 class ReplayBuffer(Dataset):
+
     def __init__(self, observation_space: gym.spaces.Box,
                  action_space: Union[gym.spaces.Discrete,
                                      gym.spaces.Box], capacity: int):

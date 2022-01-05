@@ -17,6 +17,7 @@ _mse_update_jit = jax.jit(actor.mse_update)
 
 
 class BCLearner(object):
+
     def __init__(self,
                  seed: int,
                  observations: jnp.ndarray,

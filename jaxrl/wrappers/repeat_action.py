@@ -5,6 +5,7 @@ from jaxrl.wrappers.common import TimeStep
 
 
 class RepeatAction(gym.Wrapper):
+
     def __init__(self, env, action_repeat=4):
         super().__init__(env)
         self._action_repeat = action_repeat

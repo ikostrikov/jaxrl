@@ -6,6 +6,7 @@ from jaxrl.datasets.dataset import Batch, Dataset
 
 
 class D4RLDataset(Dataset):
+
     def __init__(self,
                  env: gym.Env,
                  clip_to_eps: bool = True,

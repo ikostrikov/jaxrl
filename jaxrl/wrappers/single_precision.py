@@ -6,6 +6,7 @@ from gym.spaces import Box, Dict
 
 
 class SinglePrecision(gym.ObservationWrapper):
+
     def __init__(self, env):
         super().__init__(env)
 

@@ -8,6 +8,7 @@ from jaxrl.wrappers.common import TimeStep
 
 class EpisodeMonitor(gym.ActionWrapper):
     """A class that computes episode returns and lengths."""
+
     def __init__(self, env: gym.Env):
         super().__init__(env)
         self._reset_stats()
@@ -38,6 +39,6 @@ class EpisodeMonitor(gym.ActionWrapper):
 
         return observation, reward, done, info
 
-    def reset(self) -> np.ndarray:
+    def reset(self, **kwargs) -> np.ndarray:
         self._reset_stats()
         return self.env.reset()

@@ -119,6 +119,7 @@ class MaskedMLP(nn.Module):
 
 
 class Autoregressive(tfd.Distribution):
+
     def __init__(self, distr_fn: typing.Callable[[jnp.ndarray],
                                                  tfd.Distribution],
                  batch_shape: typing.Tuple[int], event_dim: int):

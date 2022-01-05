@@ -27,6 +27,7 @@ ENV_NAME_TO_FILE = {
 
 
 class AWACDataset(Dataset):
+
     def __init__(self,
                  env_name: str,
                  clip_to_eps: bool = True,

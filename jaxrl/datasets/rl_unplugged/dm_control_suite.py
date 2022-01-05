@@ -242,6 +242,7 @@ class MujocoActionNormalizer(wrappers.EnvironmentWrapper):
     adaptor rescale actions to the desired range. This allows actor network to
     output unscaled actions for better gradient dynamics.
   """
+
     def __init__(self, environment, rescale='clip'):
         super().__init__(environment)
         self._rescale = rescale
@@ -260,6 +261,7 @@ class MujocoActionNormalizer(wrappers.EnvironmentWrapper):
 
 class NormilizeActionSpecWrapper(wrappers.EnvironmentWrapper):
     """Turn each dimension of the actions into the range of [-1, 1]."""
+
     def __init__(self, environment):
         super().__init__(environment)
 
@@ -290,6 +292,7 @@ class NormilizeActionSpecWrapper(wrappers.EnvironmentWrapper):
 
 class FilterObservationsWrapper(wrappers.EnvironmentWrapper):
     """Filter out all the observations not specified to this wrapper."""
+
     def __init__(self, environment, observations_to_keep):
         super().__init__(environment)
         self._observations_to_keep = observations_to_keep
@@ -314,6 +317,7 @@ class FilterObservationsWrapper(wrappers.EnvironmentWrapper):
 
 class ControlSuite:
     """Create bits needed to run agents on an Control Suite dataset."""
+
     def __init__(self, task_name='humanoid_run'):
         """Initializes datasets/environments for the Deepmind Control suite.
 
@@ -492,6 +496,7 @@ class ControlSuite:
 
 class CmuThirdParty:
     """Create bits needed to run agents on an locomotion humanoid dataset."""
+
     def __init__(self, task_name='humanoid_walls'):
         # 'humanoid_corridor|humanoid_gaps|humanoid_walls'
         self._task_name = task_name
@@ -576,6 +581,7 @@ class CmuThirdParty:
 
 class Rodent:
     """Create bits needed to run agents on an Rodent dataset."""
+
     def __init__(self, task_name='rodent_gaps'):
         # 'rodent_escape|rodent_two_touch|rodent_gaps|rodent_mazes'
         self._task_name = task_name
@@ -666,6 +672,7 @@ class Rodent:
 
 def _parse_seq_tf_example(example, uint8_features, shapes):
     """Parse tf.Example containing one or two episode steps."""
+
     def to_feature(key, shape):
         if key in uint8_features:
             return tf.io.FixedLenSequenceFeature(shape=[],

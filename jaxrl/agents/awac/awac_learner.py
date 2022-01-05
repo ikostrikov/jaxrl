@@ -48,6 +48,7 @@ def _update_jit(
 
 
 class AWACLearner(object):
+
     def __init__(self,
                  seed: int,
                  observations: jnp.ndarray,

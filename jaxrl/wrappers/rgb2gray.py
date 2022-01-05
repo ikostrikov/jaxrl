@@ -3,6 +3,7 @@ import numpy as np
 
 
 class RGB2Gray(gym.ObservationWrapper):
+
     def __init__(self, env):
         super().__init__(env)
 

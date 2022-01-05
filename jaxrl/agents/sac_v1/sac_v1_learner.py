@@ -50,6 +50,7 @@ def _update_jit(
 
 
 class SACV1Learner(object):
+
     def __init__(self,
                  seed: int,
                  observations: jnp.ndarray,

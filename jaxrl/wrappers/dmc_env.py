@@ -34,6 +34,7 @@ def dmc_spec2gym_space(spec):
 
 
 class DMCEnv(core.Env):
+
     def __init__(self,
                  domain_name: Optional[str] = None,
                  task_name: Optional[str] = None,

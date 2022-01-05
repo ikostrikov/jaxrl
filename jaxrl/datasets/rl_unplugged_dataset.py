@@ -7,6 +7,7 @@ from jaxrl.datasets.dataset import Dataset
 
 
 class RLUnpluggedDataset(Dataset):
+
     def __init__(self,
                  task_name: str,
                  clip_to_eps: bool = True,

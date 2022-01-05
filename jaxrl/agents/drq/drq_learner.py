@@ -66,6 +66,7 @@ def _update_jit(
 
 
 class DrQLearner(object):
+
     def __init__(self,
                  seed: int,
                  observations: jnp.ndarray,

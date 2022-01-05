@@ -10,6 +10,7 @@ from jaxrl.wrappers.common import TimeStep
 # Take from
 # https://github.com/denisyarats/pytorch_sac/
 class VideoRecorder(gym.Wrapper):
+
     def __init__(self,
                  env: gym.Env,
                  save_folder: str = '',

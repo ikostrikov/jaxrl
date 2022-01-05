@@ -8,6 +8,7 @@ def make_non_absorbing(observation):
 
 
 class AbsorbingStatesWrapper(Wrapper):
+
     def __init__(self, env):
         super().__init__(env)
         low = env.observation_space.low

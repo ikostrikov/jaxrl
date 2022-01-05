@@ -46,6 +46,7 @@ def main(_):
         video_eval_folder = None
 
     def make_env(env_name, seed):
+
         def _make():
             env = env_utils.make_env(env_name, seed, None)
             return env

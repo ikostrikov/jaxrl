@@ -19,6 +19,7 @@ class Temperature(nn.Module):
 
 def update(temp: Model, entropy: float,
            target_entropy: float) -> Tuple[Model, InfoDict]:
+
     def temperature_loss_fn(temp_params):
         temperature = temp.apply_fn({'params': temp_params})
         temp_loss = temperature * (entropy - target_entropy).mean()
