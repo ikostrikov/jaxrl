@@ -33,12 +33,17 @@ class Critic(nn.Module):
 class DoubleCritic(nn.Module):
     hidden_dims: Sequence[int]
     activations: Callable[[jnp.ndarray], jnp.ndarray] = nn.relu
+    num_qs: int = 2
 
     @nn.compact
-    def __call__(self, observations: jnp.ndarray,
-                 actions: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray]:
-        critic1 = Critic(self.hidden_dims,
-                         activations=self.activations)(observations, actions)
-        critic2 = Critic(self.hidden_dims,
-                         activations=self.activations)(observations, actions)
-        return critic1, critic2
+    def __call__(self, states, actions):
+
+        VmapCritic = nn.vmap(Critic,
+                             variable_axes={'params': 0},
+                             split_rngs={'params': True},
+                             in_axes=None,
+                             out_axes=0,
+                             axis_size=self.num_qs)
+        qs = VmapCritic(self.hidden_dims,
+                        activations=self.activations)(states, actions)
+        return qs
