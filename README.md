@@ -117,4 +117,4 @@ When contributing to this repository, please first discuss the change you wish t
 
 # Acknowledgements 
 
-Thanks to @evgenii-nikishin for helping with JAX. And @dibyaghosh for helping with vmapped ensembles.
+Thanks to [@evgenii-nikishin](https://github.com/evgenii-nikishin) for helping with JAX. And [@dibyaghosh](https://github.com/dibyaghosh) for helping with vmapped ensembles.
