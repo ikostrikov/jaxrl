@@ -114,3 +114,7 @@ docker build -t ikostrikov/jaxrl . -f Dockerfile
 # Contributing
 
 When contributing to this repository, please first discuss the change you wish to make via issue. If you are not familiar with pull requests, please read [this documentation](https://opensource.com/article/19/7/create-pull-request-github).
+
+# Acknowledgements 
+
+Thanks to @evgenii-nikishin for helping with JAX. And @dibyaghosh for helping with vmapped ensembles.
