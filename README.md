@@ -8,6 +8,7 @@ This repository contains JAX (Flax) implementations of Reinforcement Learning al
 * [Advantage Weighted Actor Critic](https://arxiv.org/abs/2006.09359)
 * [Image Augmentation Is All You Need](https://arxiv.org/abs/2004.13649)(only [K=1, M=1])
 * [Deep Deterministic Policy Gradient](https://arxiv.org/abs/1509.02971) with [Clipped Double Q-Learning](https://arxiv.org/abs/1802.09477)
+* [Randomized Ensembled Double Q-Learning: Learning Fast Without a Model](https://arxiv.org/abs/2101.05982)
 * Behavioral Cloning
 
 The goal of this repository is to provide simple and clean implementations to build research on top of. **Please do not use this repository for baseline results and use the original implementations instead ([SAC](https://github.com/rail-berkeley/softlearning/), [AWAC](https://github.com/vitchyr/rlkit/tree/master/examples/awac), [DrQ](https://github.com/denisyarats/drq)).**
@@ -25,6 +26,9 @@ If you use JAXRL in your work, please cite this repository in publications:
 ```
 
 # Changelog
+
+## January 10th, 2022
+- Added an implementation of [Randomized Ensembled Double Q-Learning: Learning Fast Without a Model](https://arxiv.org/abs/2101.05982)
 
 ## July 20th, 2021
 - Added an implementation of [Deep Deterministic Policy Gradient](https://arxiv.org/abs/1509.02971) with [Clipped Double Q-Learning](https://arxiv.org/abs/1802.09477)

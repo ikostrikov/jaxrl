@@ -7,7 +7,8 @@ from absl import app, flags
 from ml_collections import config_flags
 from tensorboardX import SummaryWriter
 
-from jaxrl.agents import AWACLearner, DDPGLearner, SACLearner, SACV1Learner
+from jaxrl.agents import (AWACLearner, DDPGLearner, REDQLearner, SACLearner,
+                          SACV1Learner)
 from jaxrl.datasets import ReplayBuffer
 from jaxrl.evaluation import evaluate
 from jaxrl.utils import make_env
@@ -22,6 +23,7 @@ flags.DEFINE_integer('eval_episodes', 10,
 flags.DEFINE_integer('log_interval', 1000, 'Logging interval.')
 flags.DEFINE_integer('eval_interval', 5000, 'Eval interval.')
 flags.DEFINE_integer('batch_size', 256, 'Mini batch size.')
+flags.DEFINE_integer('updates_per_step', 1, 'Gradient updates per step.')
 flags.DEFINE_integer('max_steps', int(1e6), 'Number of training steps.')
 flags.DEFINE_integer('start_training', int(1e4),
                      'Number of training steps to start training.')
@@ -58,6 +60,12 @@ def main(_):
         agent = SACLearner(FLAGS.seed,
                            env.observation_space.sample()[np.newaxis],
                            env.action_space.sample()[np.newaxis], **kwargs)
+    elif algo == 'redq':
+        agent = REDQLearner(FLAGS.seed,
+                            env.observation_space.sample()[np.newaxis],
+                            env.action_space.sample()[np.newaxis],
+                            policy_update_delay=FLAGS.updates_per_step,
+                            **kwargs)
     elif algo == 'sac_v1':
         agent = SACV1Learner(FLAGS.seed,
                              env.observation_space.sample()[np.newaxis],
@@ -108,8 +116,9 @@ def main(_):
                                           info['total']['timesteps'])
 
         if i >= FLAGS.start_training:
-            batch = replay_buffer.sample(FLAGS.batch_size)
-            update_info = agent.update(batch)
+            for _ in range(FLAGS.updates_per_step):
+                batch = replay_buffer.sample(FLAGS.batch_size)
+                update_info = agent.update(batch)
 
             if i % FLAGS.log_interval == 0:
                 for k, v in update_info.items():

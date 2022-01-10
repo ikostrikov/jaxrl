@@ -19,7 +19,7 @@ description = ('Implementations of Reinforcement Learning algorithms in Jax.')
 
 setup(
     name='jaxrl',
-    version='0.0.6',
+    version='0.0.7',
     description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
