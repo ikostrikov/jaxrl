@@ -16,7 +16,8 @@ class VideoRecorder(gym.Wrapper):
                  save_folder: str = '',
                  height: int = 128,
                  width: int = 128,
-                 fps: int = 30):
+                 fps: int = 30,
+                 camera_id: int = -1):
         super().__init__(env)
 
         self.current_episode = 0
@@ -24,6 +25,7 @@ class VideoRecorder(gym.Wrapper):
         self.height = height
         self.width = width
         self.fps = fps
+        self.camera_id = camera_id
         self.frames = []
 
         try:
@@ -35,7 +37,8 @@ class VideoRecorder(gym.Wrapper):
 
         frame = self.env.render(mode='rgb_array',
                                 height=self.height,
-                                width=self.width)
+                                width=self.width,
+                                camera_id=self.camera_id)
 
         if frame is None:
             try:
