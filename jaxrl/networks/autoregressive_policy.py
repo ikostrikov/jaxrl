@@ -208,3 +208,54 @@ class MADETanhMixturePolicy(nn.Module):
 
         dist = Autoregressive(distr_fn, states.shape[:-1], self.action_dim)
         return tfd.TransformedDistribution(dist, tfb.Tanh())
+
+
+class MyUniform(tfd.Uniform):
+
+    def _prob(self, inputs):
+        return super()._prob(inputs) + 1e-8
+
+
+class MADEDiscretizedPolicy(nn.Module):
+    features: typing.Sequence[int]
+    action_dim: int
+    num_components: int = 100
+    dropout_rate: typing.Optional[float] = None
+
+    @nn.compact
+    def __call__(self,
+                 states: jnp.ndarray,
+                 temperature: float = 1.0,
+                 training: bool = False) -> tfd.Distribution:
+        is_initializing = not self.has_variable('params', 'means')
+        masked_mlp = MaskedMLP(
+            (*self.features, self.num_components * self.action_dim),
+            dropout_rate=self.dropout_rate)
+
+        if is_initializing:
+            actions = jnp.zeros((*states.shape[:-1], self.action_dim),
+                                states.dtype)
+            masked_mlp(actions, states)
+
+        def distr_fn(actions: jnp.ndarray) -> tfd.Distribution:
+            logits = masked_mlp(actions, states, training=training)
+
+            def reshape(x):
+                new_shape = (*x.shape[:-1], self.num_components,
+                             actions.shape[-1])
+                x = jnp.reshape(x, new_shape)
+                return jnp.swapaxes(x, -1, -2)
+
+            xs = jnp.linspace(-1, 1, self.num_components + 1)
+            low = xs[:-1]
+            high = xs[1:]
+
+            logits = reshape(logits)
+
+            dist = MyUniform(low=low, high=high)
+
+            dist = tfd.MixtureSameFamily(tfd.Categorical(logits=logits), dist)
+
+            return tfd.Independent(dist, reinterpreted_batch_ndims=1)
+
+        return Autoregressive(distr_fn, states.shape[:-1], self.action_dim)

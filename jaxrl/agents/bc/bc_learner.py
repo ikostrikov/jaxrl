@@ -41,9 +41,14 @@ class BCLearner(object):
             actor_def = policies.NormalTanhMixturePolicy(hidden_dims,
                                                          action_dim,
                                                          dropout_rate=0.1)
-        else:
+        elif distribution == 'made_mog':
             actor_def = autoregressive_policy.MADETanhMixturePolicy(
                 hidden_dims, action_dim, dropout_rate=0.1)
+        elif distribution == 'made_d':
+            actor_def = autoregressive_policy.MADEDiscretizedPolicy(
+                hidden_dims, action_dim, dropout_rate=0.1)
+        else:
+            raise NotImplemented
 
         schedule_fn = optax.cosine_decay_schedule(-actor_lr, num_steps)
         optimiser = optax.chain(optax.scale_by_adam(),
