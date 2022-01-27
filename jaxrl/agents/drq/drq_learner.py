@@ -42,7 +42,7 @@ def _update_jit(
                                             temp,
                                             batch,
                                             discount,
-                                            soft_critic=True)
+                                            backup_entropy=True)
     if update_target:
         new_target_critic = target_update(new_critic, target_critic, tau)
     else:
