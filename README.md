@@ -41,26 +41,46 @@ If you use JAXRL in your work, please cite this repository in publications:
 
 # Installation
 
+Prerequisites:
+* Python 3.8-3.9 (not yet 3.10)
+* [Poetry](https://python-poetry.org)
+* patchelf
+
+Suggested build environment:
 ```bash
-conda install patchelf
-pip install dm_control
-pip install --upgrade git+https://github.com/ikostrikov/jaxrl
-# For GPU support run
-pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
+# general build dependencies
+sudo apt-get update; sudo apt-get install make build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+# mujoco dependencies
+apt-get -y install wget unzip software-properties-common \
+    libgl1-mesa-dev \
+    libgl1-mesa-glx \
+    libglew-dev \
+    libosmesa6-dev patchelf
+# mujoco installation
+curl -OL https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz
+mkdir ~/.mujoco
+tar -zxf mujoco210-linux-x86_64.tar.gz -C ~/.mujoco
+rm mujoco210-linux-x86_64.tar.gz
 ```
 
-If you want to run this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
+To install, run
+
+```bash
+poetry install
+# For GPU support run
+pip install "jax[cuda]==0.3.10" -f https://storage.googleapis.com/jax-releases/jax_releases.html
+```
+
+For further instructions on running this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
 
 Please follow [the instructions](https://github.com/openai/mujoco-py/pull/583/files) to build mujoco-py with fast headless GPU rendering.
 
 # Development 
 
-If you want to modify the code, install following the instructions below.
+If you want to modify the code, install following the instructions above.
 
-```bash
-conda install patchelf
-pip install --upgrade -e .
-```
 
 # [Examples](examples/)
 
