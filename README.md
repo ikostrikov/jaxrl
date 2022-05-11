@@ -75,8 +75,6 @@ pip install "jax[cuda]==0.3.10" -f https://storage.googleapis.com/jax-releases/j
 
 For further instructions on running this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
 
-Please follow [the instructions](https://github.com/openai/mujoco-py/pull/583/files) to build mujoco-py with fast headless GPU rendering.
-
 # Development 
 
 If you want to modify the code, install following the instructions above.
