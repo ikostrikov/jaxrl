@@ -75,6 +75,13 @@ pip install "jax[cuda]==0.3.10" -f https://storage.googleapis.com/jax-releases/j
 
 For further instructions on running this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
 
+For MuJoCo inslattion, you may need to add the following lines in the `.bashrc`:
+
+```bash
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/costa/.mujoco/mujoco210/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/nvidia
+```
+
 # Development 
 
 If you want to modify the code, install following the instructions above.
