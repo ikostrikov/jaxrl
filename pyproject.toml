@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "jaxrl"
+version = "0.1.0"
+description = ""
+authors = ["Costa Huang <costa.huang@outlook.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.10"
+numpy = "^1.22.3"
+scipy = "^1.8.0"
+absl-py = "^1.0.0"
+gym = "^0.23.1"
+gdown = "^4.4.0"
+tqdm = "^4.64.0"
+flax = "^0.4.2"
+jax = "^0.3.10"
+ml-collections = "^0.1.1"
+optax = "^0.1.2"
+tensorboardX = "^2.5"
+tensorflow-probability = "^0.16.0"
+imageio = "^2.19.1"
+imageio-ffmpeg = "^0.4.7"
+mujoco-py = "^2.1.2"
+d4rl = {git = "https://github.com/ikostrikov/d4rl.git"}
+dm-control = "^1.0.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
