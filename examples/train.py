@@ -135,29 +135,29 @@ def main(_):
                                           info['is_success'],
                                           info['total']['timesteps'])
 
-        # if i >= FLAGS.start_training:
-        #     for _ in range(FLAGS.updates_per_step):
-        #         batch = replay_buffer.sample(FLAGS.batch_size)
-        #         update_info = agent.update(batch)
+        if i >= FLAGS.start_training:
+            for _ in range(FLAGS.updates_per_step):
+                batch = replay_buffer.sample(FLAGS.batch_size)
+                update_info = agent.update(batch)
 
-        #     if i % FLAGS.log_interval == 0:
-        #         for k, v in update_info.items():
-        #             summary_writer.add_scalar(f'training/{k}', v, i)
-        #         summary_writer.flush()
+            if i % FLAGS.log_interval == 0:
+                for k, v in update_info.items():
+                    summary_writer.add_scalar(f'training/{k}', v, i)
+                summary_writer.flush()
 
-        # if i % FLAGS.eval_interval == 0:
-        #     eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
+        if i % FLAGS.eval_interval == 0:
+            eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
 
-        #     for k, v in eval_stats.items():
-        #         summary_writer.add_scalar(f'evaluation/average_{k}s', v,
-        #                                   info['total']['timesteps'])
-        #     summary_writer.flush()
+            for k, v in eval_stats.items():
+                summary_writer.add_scalar(f'evaluation/average_{k}s', v,
+                                          info['total']['timesteps'])
+            summary_writer.flush()
 
-        #     eval_returns.append(
-        #         (info['total']['timesteps'], eval_stats['return']))
-        #     np.savetxt(os.path.join(FLAGS.save_dir, f'{FLAGS.seed}.txt'),
-        #                eval_returns,
-        #                fmt=['%d', '%.1f'])
+            eval_returns.append(
+                (info['total']['timesteps'], eval_stats['return']))
+            np.savetxt(os.path.join(FLAGS.save_dir, f'{FLAGS.seed}.txt'),
+                       eval_returns,
+                       fmt=['%d', '%.1f'])
 
 
 if __name__ == '__main__':
