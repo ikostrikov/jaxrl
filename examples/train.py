@@ -47,7 +47,6 @@ def main(_):
     print(FLAGS)
     if FLAGS.track:
         import wandb
-        
 
         wandb.init(
             project=FLAGS.wandb_project_name,
