@@ -23,6 +23,7 @@ imageio-ffmpeg = "^0.4.7"
 mujoco-py = "^2.1.2"
 d4rl = {git = "https://github.com/ikostrikov/d4rl.git"}
 dm-control = "^1.0.2"
+wandb = "^0.12.16"
 
 [tool.poetry.dev-dependencies]
 

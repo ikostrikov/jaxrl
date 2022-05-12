@@ -1,5 +1,6 @@
 import os
 import random
+import time
 
 import numpy as np
 import tqdm
@@ -29,6 +30,9 @@ flags.DEFINE_integer('start_training', int(1e4),
                      'Number of training steps to start training.')
 flags.DEFINE_boolean('tqdm', True, 'Use tqdm progress bar.')
 flags.DEFINE_boolean('save_video', False, 'Save videos during evaluation.')
+flags.DEFINE_boolean('track', False, 'Track experiments with Weights and Biases.')
+flags.DEFINE_string('wandb_project_name', "jaxrl", "The wandb's project name.")
+flags.DEFINE_string('wandb_entity', None, "the entity (team) of wandb's project")
 config_flags.DEFINE_config_file(
     'config',
     'configs/sac_default.py',
@@ -37,8 +41,26 @@ config_flags.DEFINE_config_file(
 
 
 def main(_):
+    kwargs = dict(FLAGS.config)
+    algo = kwargs.pop('algo')
+    run_name = f"{FLAGS.env_name}__{algo}__{FLAGS.seed}__{int(time.time())}"
+    print(FLAGS)
+    if FLAGS.track:
+        import wandb
+        
+
+        wandb.init(
+            project=FLAGS.wandb_project_name,
+            entity=FLAGS.wandb_entity,
+            sync_tensorboard=True,
+            config=FLAGS,
+            name=run_name,
+            monitor_gym=True,
+            save_code=True,
+        )
+
     summary_writer = SummaryWriter(
-        os.path.join(FLAGS.save_dir, 'tb', str(FLAGS.seed)))
+        os.path.join(FLAGS.save_dir, run_name))
 
     if FLAGS.save_video:
         video_train_folder = os.path.join(FLAGS.save_dir, 'video', 'train')
@@ -53,8 +75,7 @@ def main(_):
     np.random.seed(FLAGS.seed)
     random.seed(FLAGS.seed)
 
-    kwargs = dict(FLAGS.config)
-    algo = kwargs.pop('algo')
+
     replay_buffer_size = kwargs.pop('replay_buffer_size')
     if algo == 'sac':
         agent = SACLearner(FLAGS.seed,
@@ -115,29 +136,29 @@ def main(_):
                                           info['is_success'],
                                           info['total']['timesteps'])
 
-        if i >= FLAGS.start_training:
-            for _ in range(FLAGS.updates_per_step):
-                batch = replay_buffer.sample(FLAGS.batch_size)
-                update_info = agent.update(batch)
+        # if i >= FLAGS.start_training:
+        #     for _ in range(FLAGS.updates_per_step):
+        #         batch = replay_buffer.sample(FLAGS.batch_size)
+        #         update_info = agent.update(batch)
 
-            if i % FLAGS.log_interval == 0:
-                for k, v in update_info.items():
-                    summary_writer.add_scalar(f'training/{k}', v, i)
-                summary_writer.flush()
+        #     if i % FLAGS.log_interval == 0:
+        #         for k, v in update_info.items():
+        #             summary_writer.add_scalar(f'training/{k}', v, i)
+        #         summary_writer.flush()
 
-        if i % FLAGS.eval_interval == 0:
-            eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
+        # if i % FLAGS.eval_interval == 0:
+        #     eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
 
-            for k, v in eval_stats.items():
-                summary_writer.add_scalar(f'evaluation/average_{k}s', v,
-                                          info['total']['timesteps'])
-            summary_writer.flush()
+        #     for k, v in eval_stats.items():
+        #         summary_writer.add_scalar(f'evaluation/average_{k}s', v,
+        #                                   info['total']['timesteps'])
+        #     summary_writer.flush()
 
-            eval_returns.append(
-                (info['total']['timesteps'], eval_stats['return']))
-            np.savetxt(os.path.join(FLAGS.save_dir, f'{FLAGS.seed}.txt'),
-                       eval_returns,
-                       fmt=['%d', '%.1f'])
+        #     eval_returns.append(
+        #         (info['total']['timesteps'], eval_stats['return']))
+        #     np.savetxt(os.path.join(FLAGS.save_dir, f'{FLAGS.seed}.txt'),
+        #                eval_returns,
+        #                fmt=['%d', '%.1f'])
 
 
 if __name__ == '__main__':
