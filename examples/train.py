@@ -44,7 +44,6 @@ def main(_):
     kwargs = dict(FLAGS.config)
     algo = kwargs.pop('algo')
     run_name = f"{FLAGS.env_name}__{algo}__{FLAGS.seed}__{int(time.time())}"
-    print(FLAGS)
     if FLAGS.track:
         import wandb
 
