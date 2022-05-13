@@ -5,7 +5,6 @@ from gym.wrappers import RescaleAction
 from gym.wrappers.pixel_observation import PixelObservationWrapper
 
 from jaxrl import wrappers
-from jaxrl.wrappers import VideoRecorder
 
 
 def make_env(env_name: str,
@@ -44,7 +43,7 @@ def make_env(env_name: str,
     env = RescaleAction(env, -1.0, 1.0)
 
     if save_folder is not None:
-        env = VideoRecorder(env, save_folder=save_folder)
+        env = gym.wrappers.RecordVideo(env, save_folder)
 
     if from_pixels:
         if env_name in env_ids:

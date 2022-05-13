@@ -6,6 +6,13 @@ OpenAI Gym MuJoCo tasks
 python train.py --env_name=HalfCheetah-v2 --save_dir=./tmp/
 ```
 
+Experiment tracking with Weights and Biases
+
+```bash
+python train.py --env_name=HalfCheetah-v2 --save_dir=./tmp/ --track
+```
+
+
 DeepMind Control suite (--env-name=domain-task)
 
 ```bash
