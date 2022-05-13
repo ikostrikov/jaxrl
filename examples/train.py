@@ -56,6 +56,7 @@ def main(_):
             monitor_gym=True,
             save_code=True,
         )
+        wandb.config.update({"algo": algo})
 
     summary_writer = SummaryWriter(
         os.path.join(FLAGS.save_dir, run_name))
