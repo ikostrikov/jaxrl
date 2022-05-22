@@ -1,15 +1,71 @@
-numpy >= 1.20.2
-scipy >= 1.6.0
-absl-py >= 0.12.0
-gym[mujoco] >= 0.18.0
-gdown >= 3.12.2
-tqdm >= 4.60.0
-flax >= 0.3.5
-jax >= 0.2.26
-ml_collections >= 0.1.0
-optax >= 0.0.6
-tensorboardX == 2.1
-tensorflow-probability >= 0.15.0
-imageio >= 2.9.0
-imageio-ffmpeg >= 0.4.3
-d4rl @ git+https://github.com/ikostrikov/d4rl@master#egg=d4rl
+absl-py==1.0.0; python_version >= "3.6"
+beautifulsoup4==4.11.1; python_full_version >= "3.6.0"
+certifi==2021.10.8; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_version >= "3.7" and python_version <= "3.10" and python_full_version >= "3.6.0"
+cffi==1.15.0; python_version >= "3.6"
+charset-normalizer==2.0.12; python_full_version >= "3.6.0" and python_version >= "3.7" and python_version <= "3.10"
+chex==0.1.3; python_version >= "3.7"
+click==8.1.3; python_version >= "3.7"
+cloudpickle==2.0.0; python_version >= "3.7"
+colorama==0.4.4; python_version >= "3.7" and python_full_version < "3.0.0" and platform_system == "Windows" and python_version <= "3.10" or python_full_version >= "3.5.0" and platform_system == "Windows" and python_version >= "3.7" and python_version <= "3.10"
+contextlib2==21.6.0; python_version >= "3.6"
+cycler==0.11.0; python_version >= "3.7"
+cython==0.29.28; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.3.0" and python_version >= "3.6"
+d4rl @ git+https://github.com/ikostrikov/d4rl.git@master
+decorator==5.1.1; python_version >= "3.5"
+dm-control==1.0.2; python_version >= "3.7" and python_version <= "3.10"
+dm-env==1.5; python_version >= "3.7" and python_version <= "3.10"
+dm-tree==0.1.7; python_version >= "3.7" and python_version <= "3.10"
+fasteners==0.17.3; python_version >= "3.6"
+filelock==3.6.0; python_version >= "3.7"
+flatbuffers==2.0; python_version >= "3.7"
+flax==0.4.2
+fonttools==4.33.3; python_version >= "3.7"
+future==0.18.2; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_version >= "3.7" and python_version <= "3.10" and python_full_version >= "3.3.0"
+gast==0.5.3; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.4.0"
+gdown==4.4.0
+glfw==2.5.3; python_version >= "3.7" and python_version <= "3.10"
+gym-notices==0.0.6; python_version >= "3.7"
+gym==0.23.1; python_version >= "3.7"
+h5py==3.6.0; python_version >= "3.7"
+idna==3.3; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_full_version >= "3.6.0" and python_version >= "3.7" and python_version <= "3.10"
+imageio-ffmpeg==0.4.7; python_version >= "3.5"
+imageio==2.19.1; python_version >= "3.7"
+importlib-metadata==4.11.3; python_version < "3.10" and python_version >= "3.7"
+jax==0.3.10; python_version >= "3.7"
+jaxlib==0.3.10; python_version >= "3.7"
+kiwisolver==1.4.2; python_version >= "3.7"
+labmaze==1.0.5; python_version >= "3.7" and python_version <= "3.10"
+lxml==4.8.0; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_version >= "3.7" and python_version <= "3.10" and python_full_version >= "3.5.0"
+matplotlib==3.5.2; python_version >= "3.7"
+mjrl @ git+https://github.com/aravindr93/mjrl@master
+ml-collections==0.1.1; python_version >= "2.6"
+msgpack==1.0.3
+mujoco-py==2.1.2.14; python_version >= "3.6"
+mujoco==2.1.5; python_version >= "3.7" and python_version <= "3.10"
+numpy==1.22.3; python_version >= "3.8"
+opt-einsum==3.3.0; python_version >= "3.7"
+optax==0.1.2; python_version >= "3.7"
+packaging==21.3; python_version >= "3.7"
+pillow==9.1.0; python_version >= "3.7"
+protobuf==3.20.1; python_version >= "3.7" and python_version <= "3.10"
+pybullet==3.2.4
+pycparser==2.21; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6"
+pyopengl==3.1.6; python_version >= "3.7" and python_version <= "3.10"
+pyparsing==2.4.7; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_version >= "3.7" and python_version <= "3.10" and python_full_version >= "3.3.0"
+pysocks==1.7.1; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_full_version >= "3.6.0" and python_version >= "3.7" and python_version <= "3.10"
+python-dateutil==2.8.2; python_version >= "3.7" and python_full_version < "3.0.0" or python_full_version >= "3.3.0" and python_version >= "3.7"
+pyyaml==6.0; python_version >= "3.6"
+requests==2.27.1; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_version >= "3.7" and python_version <= "3.10" and python_full_version >= "3.6.0"
+scipy==1.8.0; python_version >= "3.8" and python_version < "3.11"
+setuptools-scm==6.4.2; python_version >= "3.7"
+six==1.16.0; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_full_version >= "3.3.0" and python_version >= "3.7" and python_version <= "3.10"
+soupsieve==2.3.2.post1; python_version >= "3.6" and python_full_version >= "3.6.0"
+tensorboardx==2.5
+tensorflow-probability==0.16.0
+termcolor==1.1.0
+tomli==2.0.1; python_version >= "3.7"
+toolz==0.11.2; python_version >= "3.7"
+tqdm==4.64.0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.4.0")
+typing-extensions==4.2.0; python_version >= "3.7"
+urllib3==1.26.9; python_version >= "3.7" and python_full_version < "3.0.0" and python_version <= "3.10" or python_full_version >= "3.6.0" and python_version <= "3.10" and python_version >= "3.7"
+zipp==3.8.0; python_version < "3.10" and python_version >= "3.7"
