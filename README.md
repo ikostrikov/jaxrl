@@ -70,7 +70,7 @@ To install, run
 ```bash
 poetry install
 # For GPU support run
-pip install "jax[cuda]==0.3.10" -f https://storage.googleapis.com/jax-releases/jax_releases.html
+pip install "jax[cuda]==0.3.10" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ```
 
 For further instructions on running this code on GPU, please follow instructions from [the official repository](https://github.com/google/jax).
