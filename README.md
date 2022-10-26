@@ -25,6 +25,8 @@ If you use JAXRL in your work, please cite this repository in publications:
 }
 ```
 
+You can find an updated version of this repository [here](https://github.com/ikostrikov/jaxrl2).
+
 # Changelog
 
 ## January 10th, 2022
